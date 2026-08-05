@@ -1,0 +1,17 @@
+# .NET build output
+bin/
+obj/
+
+# Version control and editor files
+.git/
+.vscode/
+.DS_Store
+
+# Local secrets
+.env
+.env.*
+
+# Files not needed to build the API
+note/
+docs/
+*.http

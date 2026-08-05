@@ -1,0 +1,19 @@
+@laoyu_blog_backend_HostAddress = http://localhost:8080
+
+GET {{laoyu_blog_backend_HostAddress}}/api/blogs
+Accept: application/json
+###
+
+GET {{laoyu_blog_backend_HostAddress}}/api/blogs/0
+Accept: application/json
+###
+
+POST {{laoyu_blog_backend_HostAddress}}/api/blogs
+Content-Type: application/json
+
+{
+  "title": "第一篇文章",
+  "content": "这是第一篇文章的正文"
+}
+
+###

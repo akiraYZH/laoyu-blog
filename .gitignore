@@ -1,0 +1,8 @@
+# .NET build output
+bin/
+obj/
+
+# Local environment variables and secrets
+.env
+.env.*
+!.env.example

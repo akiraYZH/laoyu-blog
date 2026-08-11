@@ -260,3 +260,8 @@ runtime stage 保持生产 Image 精简
 
 - [Docker Compose Watch](https://docs.docker.com/compose/how-tos/file-watch/)
 - [dotnet watch](https://learn.microsoft.com/dotnet/core/tools/dotnet-watch)
+
+## 主线导航
+
+- 上一步：[把 API 加入 Compose](./03a-add-aspnet-core-api-to-compose.md)
+- 下一步：[为已有表安全添加 Slug](./09-ef-core-add-required-column-with-existing-data.md)

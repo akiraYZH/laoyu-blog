@@ -1,116 +1,31 @@
 ---
-title: "ASP.NET Core 使用 EF Core 连接 PostgreSQL"
-description: "为 .NET 10 API 配置 PostgreSQL Connection String，创建 Entity 与 DbContext，注册 Npgsql，并生成第一个 Migration。"
+title: "在 ASP.NET Core 中配置 EF Core DbContext"
+description: "从 Connection String、Entity、DbSet 到 AddDbContext 与 UseNpgsql，建立 API 访问 PostgreSQL 的完整配置链路。"
 tags:
-  - .NET 10
   - ASP.NET Core
-  - Entity Framework Core
+  - EF Core
   - PostgreSQL
+  - DbContext
   - Npgsql
-  - Migration
 ---
 
-# ASP.NET Core 使用 EF Core 连接 PostgreSQL
+# 在 ASP.NET Core 中配置 EF Core DbContext
 
-PostgreSQL 和 API Container 都能启动，不代表 API 已经具备数据库访问能力。中间还需要完成一条配置链路：
+PostgreSQL Container 已启动，不代表 API 已经能够访问数据库。应用还需要 Connection String、Entity、DbContext 和 Npgsql Provider 共同组成数据访问链路。
 
 ```text
-Connection String
-        ↓
-Npgsql Provider
+Controller 或 Service
         ↓
 AppDbContext
         ↓
-BlogPost Entity
+EF Core
         ↓
-Migration
+Npgsql
+        ↓
+PostgreSQL
 ```
 
-本文完成这条链路，但不会直接修改数据库。Migration 生成后应先检查，再执行 `database update`。
-
-## 准备工作
-
-项目需要以下 Package 和 Local Tool：
-
-```bash
-dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
-dotnet add package Microsoft.EntityFrameworkCore.Design
-
-dotnet new tool-manifest
-dotnet tool install dotnet-ef
-```
-
-它们的职责不同：
-
-| 组件 | 作用 |
-|---|---|
-| EF Core | Entity、DbContext、查询、状态跟踪和 Migration |
-| Npgsql EF Core Provider | 把 EF Core 操作转换为 PostgreSQL 操作 |
-| Npgsql | 与 PostgreSQL 进行底层通信 |
-| EF Core Design | 支持 Migration 等设计时功能 |
-| dotnet-ef | 执行 EF Core CLI 命令 |
-
-`Npgsql.EntityFrameworkCore.PostgreSQL` 会把 EF Core 和 Npgsql 作为传递依赖带入项目，不需要重复安装 `Microsoft.EntityFrameworkCore`。
-
-## 1. 把 Connection String 传入 API
-
-在 `compose.yaml` 的 API Service 中加入：
-
-```yaml
-services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
-    depends_on:
-      postgres:
-        condition: service_healthy
-```
-
-数据库名、用户和密码来自没有提交到 Git 的 `.env.development`：
-
-```dotenv
-POSTGRES_DB=blog_dev
-POSTGRES_USER=blog_user
-POSTGRES_PASSWORD=replace_with_local_password
-```
-
-这里有两个关键点。
-
-第一，ASP.NET Core 会把环境变量中的双下划线转换为配置层级：
-
-```text
-ConnectionStrings__DefaultConnection
-                    ↓
-ConnectionStrings:DefaultConnection
-```
-
-所以 C# 可以这样读取：
-
-```csharp
-builder.Configuration.GetConnectionString("DefaultConnection");
-```
-
-第二，API 运行在 Compose Network 中，因此数据库 Host 是 PostgreSQL 的 Service Name：
-
-```text
-Host=postgres
-```
-
-Container 中的 `localhost` 指向 Container 自己，不是另一个 Container。
-
-修改后先检查 Compose 配置：
-
-```bash
-docker compose --env-file .env.development config --quiet
-```
-
-## 2. 创建 BlogPost Entity
+## 定义 Entity
 
 创建 `Models/BlogPost.cs`：
 
@@ -120,24 +35,21 @@ namespace BlogApi.Models;
 public class BlogPost
 {
     public int Id { get; set; }
-
     public string Title { get; set; } = string.Empty;
-
     public string Content { get; set; } = string.Empty;
-
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }
 ```
 
-EF Core 会按照约定解释这些属性：
+Entity 描述应用中的数据库对象。EF Core 按 Convention 推断：
 
 - `Id` 是 Primary Key；
-- 非 Nullable 的 `Title` 和 `Content` 是必填字段；
-- `CreatedAtUtc` 保存文章创建时间。
+- 非 Nullable String 映射为必填 Column；
+- `DateTime` 映射为时间类型。
 
-`= string.Empty` 解决的是 C# Nullable Warning，不是业务验证。是否允许空标题，仍应由请求验证或业务规则决定。
+`= string.Empty` 主要满足 C# Nullable Analysis，不等于完整业务验证。
 
-## 3. 创建 AppDbContext
+## 创建 DbContext
 
 创建 `Data/AppDbContext.cs`：
 
@@ -158,36 +70,91 @@ public class AppDbContext : DbContext
 }
 ```
 
-`AppDbContext` 是 API 使用 EF Core 的入口。它管理数据库配置、查询、修改跟踪和保存操作。
+`AppDbContext` 是应用使用 EF Core 的入口，负责 Query、Change Tracking 和 `SaveChangesAsync()`。
 
-构造函数中的：
+## `DbContextOptions`
+
+```csharp
+DbContextOptions<AppDbContext> options
+```
+
+Options 保存 Provider、Connection String 和其他 EF Core 配置。
 
 ```csharp
 : base(options)
 ```
 
-表示先调用父类 `DbContext` 的构造函数，把数据库 Provider 和 Connection String 等配置交给 EF Core。
+把这些配置交给父类 `DbContext`。构造函数本身可以为空，因为初始化工作由 Base Class 完成。
+
+## `DbSet<BlogPost>`
 
 ```csharp
 public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
 ```
 
-则把 `BlogPost` 加入 EF Core Model。以后可以通过 `dbContext.BlogPosts` 查询和修改文章。
+`DbSet` 是 EF Core 查询和修改某类 Entity 的入口：
 
-此时仍然没有创建数据库表。
+```csharp
+await dbContext.BlogPosts.ToListAsync();
+dbContext.BlogPosts.Add(post);
+dbContext.BlogPosts.Remove(post);
+```
 
-## 4. 注册 AppDbContext 和 Npgsql
+它可以近似理解为 Table 操作入口，但还包含 LINQ Query Construction 和 Entity Tracking 能力。
 
-在 `Program.cs` 顶部加入：
+## 准备 Connection String
+
+在 Configuration 中提供：
+
+```text
+ConnectionStrings:DefaultConnection
+```
+
+### API 运行在开发机上
+
+ASP.NET Core 默认不会自动读取 `.env.development`。在当前 Terminal 中加载数据库变量，并显式准备 Connection String：
+
+```bash
+set -a
+source .env.development
+set +a
+
+export ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=$POSTGRES_DB;Username=$POSTGRES_USER;Password=$POSTGRES_PASSWORD"
+```
+
+这里使用 `Host=localhost`，因为 .NET Process 运行在开发机上，通过 Compose 发布的端口连接 PostgreSQL。
+
+Environment Variable 只在当前 Terminal Session 及其 Child Process 中有效。不要把真实密码写进提交到 Git 的配置文件。
+
+### API 运行在 Compose 中
+
+Container Environment Variable 可以写成：
+
+```yaml
+environment:
+  ConnectionStrings__DefaultConnection: >-
+    Host=postgres;Port=5432;Database=blog_dev;
+    Username=blog_user;Password=local_password
+```
+
+双下划线会映射为 Configuration 层级分隔符：
+
+```text
+ConnectionStrings__DefaultConnection
+                ↓
+ConnectionStrings:DefaultConnection
+```
+
+API 运行在 Compose Network 中时使用 `Host=postgres`；开发机上的 CLI 使用端口映射，因此通常使用 `Host=localhost`。
+
+## 注册 DbContext 与 Npgsql
+
+在 `Program.cs` 中：
 
 ```csharp
 using BlogApi.Data;
 using Microsoft.EntityFrameworkCore;
-```
 
-然后在创建 Builder 后加入：
-
-```csharp
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString =
@@ -199,162 +166,64 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 ```
 
-这里的分工是：
+职责分解：
 
 ```text
-GetConnectionString
-读取配置
-
-AddDbContext
-把 AppDbContext 注册进 ASP.NET Core DI
-
-UseNpgsql
-指定 PostgreSQL Provider
+GetConnectionString → 读取配置
+AddDbContext        → 注册 AppDbContext
+UseNpgsql           → 选择 PostgreSQL Provider
 ```
 
-`?? throw` 让应用在缺少 Connection String 时立即停止，并给出明确错误。相比第一次查询时才失败，这更容易排查。
+缺少 Connection String 时立即抛出清晰异常，比第一次 Query 时才失败更容易诊断。
 
-`AddDbContext` 默认使用 Scoped Lifetime，通常每个 HTTP Request 获得一个独立的 `AppDbContext`。
+## Scoped Lifetime
 
-## 5. 验证编译和运行时配置
+`AddDbContext` 默认把 DbContext 注册为 Scoped。通常每个 HTTP Request 获得一个 DbContext 实例，请求结束后释放。
 
-先检查代码：
+不要把 DbContext 注册为 Singleton。DbContext 维护 Change Tracking State，也不是 Thread-safe 的全局共享对象。
+
+## 在 Controller 中使用
+
+```csharp
+public class BlogsController : ControllerBase
+{
+    private readonly AppDbContext _dbContext;
+
+    public BlogsController(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+}
+```
+
+ASP.NET Core Dependency Injection 会创建配置好的 AppDbContext，并传入 Controller Constructor，不需要手写 `new AppDbContext(...)`。
+
+## 验证
 
 ```bash
 dotnet build
 ```
 
-然后用最新源码重新构建 API Image：
+启动应用后执行一个最小数据库 Query。仅仅看到 API 启动并不能完全证明 Database Connection 有效，因为 EF Core 通常在真正执行 Query 时才打开连接。
 
-```bash
-docker compose \
-  --env-file .env.development \
-  up --detach --build
-```
-
-查看日志：
-
-```bash
-docker compose \
-  --env-file .env.development \
-  logs api --tail 30
-```
-
-预期看到：
+## 总结
 
 ```text
-Now listening on: http://[::]:8080
-Application started.
-Hosting environment: Development
+Entity          → 数据长什么样
+DbSet           → 操作某类 Entity 的入口
+DbContext       → EF Core 工作单元
+ConnectionString→ 数据库在哪里
+UseNpgsql       → 使用 PostgreSQL Provider
+AddDbContext    → 注册进 Dependency Injection
 ```
-
-如果没有出现：
-
-```text
-Connection string 'DefaultConnection' was not found.
-```
-
-说明 API Container 已经读取到 Connection String。
-
-不过应用能启动不代表表已经存在。只有真正查询数据库或应用 Migration，才能验证数据库连接和 Schema。
-
-## 6. 创建第一个 Migration
-
-Migration 是数据库结构的版本记录。它把当前 EF Core Model 转换成可检查、可提交到 Git 的 Schema Change。
-
-项目提供了 Wrapper Script，所以只需执行：
-
-```bash
-./scripts/add-migration.sh InitialCreate
-```
-
-脚本会自动：
-
-- 读取 `.env.development`；
-- 为开发机生成 `Host=localhost` 的 Connection String；
-- 使用项目级 `dotnet-ef`；
-- 指定 `AppDbContext`；
-- 把结果写入 `Data/Migrations`。
-
-为什么脚本使用 `localhost`，而 API 使用 `postgres`？
-
-```text
-API Container → postgres:5432
-开发机脚本   → localhost:5432
-```
-
-两条命令运行在不同网络环境中。
-
-成功后通常生成：
-
-```text
-Data/Migrations/
-├── 时间戳_InitialCreate.cs
-├── 时间戳_InitialCreate.Designer.cs
-└── AppDbContextModelSnapshot.cs
-```
-
-其中最需要检查的是 Migration 主文件：
-
-```csharp
-protected override void Up(MigrationBuilder migrationBuilder)
-{
-    // 应该只创建当前模型需要的表、字段和约束
-}
-
-protected override void Down(MigrationBuilder migrationBuilder)
-{
-    // 应该能够撤销 Up() 的结构变更
-}
-```
-
-`migrations add` 只生成文件，不会修改 PostgreSQL。检查正确后，下一步才是：
-
-```bash
-dotnet ef database update
-```
-
-## 为什么企业仍然使用 Migration
-
-手动修改数据库可能很快，但无法可靠回答每个环境执行过哪些变更。Migration 把 Schema Change 保存进代码仓库，让开发、测试和生产环境使用同一套版本记录。
-
-常见企业流程是：
-
-```text
-修改 Entity
-    ↓
-生成并检查 Migration
-    ↓
-提交 Pull Request
-    ↓
-CI 构建和测试
-    ↓
-部署流程应用 Migration
-```
-
-企业通常会用 Script、Makefile 或内部工具简化命令，而不是取消 Migration。
-
-Production 也不应让多个 API 实例在启动时同时修改 Schema。更稳妥的方式是由 CI/CD、一次性 Migration Job 或 EF Core Migration Bundle 单独执行。
-
-## 当前检查点
-
-到这里已经完成：
-
-- Connection String 进入 API Container；
-- 创建 `BlogPost`；
-- 创建并注册 `AppDbContext`；
-- 配置 Npgsql；
-- API Container 成功启动；
-- 准备通过 Script 生成 `InitialCreate`。
-
-下一步是检查生成的 Migration，然后将它应用到 Development PostgreSQL。
-
-Shell Script 的实现单独放在下一篇：[从重复命令到项目脚本](./05-safe-bash-automation-for-dotnet.md)。
 
 ## 参考资料
 
-- [ASP.NET Core Configuration](https://learn.microsoft.com/aspnet/core/fundamentals/configuration/)
 - [EF Core DbContext configuration](https://learn.microsoft.com/ef/core/dbcontext-configuration/)
-- [EF Core migrations](https://learn.microsoft.com/ef/core/managing-schemas/migrations/)
 - [Npgsql EF Core Provider](https://www.npgsql.org/efcore/)
+- [ASP.NET Core configuration](https://learn.microsoft.com/aspnet/core/fundamentals/configuration/)
 
+## 主线导航
+
+- 上一步：[启动 PostgreSQL 开发数据库](./02-docker-compose-postgresql-development.md)
+- 下一步：[创建第一份 EF Core Migration](./04b-create-first-ef-core-migration.md)

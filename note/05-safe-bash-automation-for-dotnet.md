@@ -151,7 +151,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 ```text
 .env.development
-dotnet-tools.json
+.config/dotnet-tools.json
 Data/Migrations
 ```
 
@@ -336,3 +336,8 @@ Shell Script 不过是保存到文件中的 Terminal Commands。`add-migration.s
 - [ShellCheck](https://www.shellcheck.net/)
 - [EF Core CLI](https://learn.microsoft.com/ef/core/cli/dotnet)
 - [GNU Make Manual](https://www.gnu.org/software/make/manual/)
+
+## 主线导航
+
+- 上一步：[创建第一份 EF Core Migration](./04b-create-first-ef-core-migration.md)
+- 下一步：[封装 Database Update 与回滚](./05a-safe-ef-core-database-update-script.md)

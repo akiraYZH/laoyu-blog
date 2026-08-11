@@ -14,7 +14,7 @@ ENV DOTNET_USE_POLLING_FILE_WATCHER=1
 
 EXPOSE 8080
 
-CMD ["dotnet", "watch", "run", "--no-launch-profile"]
+CMD ["dotnet", "watch", "--no-hot-reload", "run", "--no-launch-profile"]
 
 
 FROM development AS build

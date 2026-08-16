@@ -1,11 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
-using System.Collections.Generic;
-using System.Linq;
-using laoyu_blog_backend.Data;
 using laoyu_blog_backend.Models;
-using Microsoft.EntityFrameworkCore;
 using laoyu_blog_backend.Dtos;
+using laoyu_blog_backend.Services;
 
 namespace laoyu_blog_backend.Controllers
 {
@@ -13,56 +9,28 @@ namespace laoyu_blog_backend.Controllers
     [Route("api/[controller]")]
     public class BlogsController : ControllerBase
     {
-        private readonly AppDbContext _dbContext;
-        public BlogsController(AppDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly BlogPostService _blogPostService;
 
-        private static bool IsSlugConflict(DbUpdateException exception)
+        public BlogsController(BlogPostService blogsService)
         {
-            return exception.InnerException is PostgresException postgresException
-                && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
-                && postgresException.ConstraintName == "IX_BlogPosts_Slug";
+            _blogPostService = blogsService;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(PagedResultDto<BlogPost>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<PagedResultDto<BlogPost>>> GetPosts([FromQuery] PaginationQueryDto pagination)
+        [ProducesResponseType(typeof(PagedResultDto<BlogPostResponseDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PagedResultDto<BlogPostResponseDto>>> GetPosts([FromQuery] PaginationQueryDto pagination)
         {
-            var query = _dbContext.BlogPosts
-            .AsNoTracking()
-            .OrderByDescending(post => post.CreatedAtUtc)
-            .ThenByDescending(post => post.Id);
-
-            var TotalItems = await query.CountAsync();
-
-            var items = await query
-                .Skip((pagination.Page - 1) * pagination.PageSize)
-                .Take(pagination.PageSize)
-                .ToListAsync();
-
-            var result = new PagedResultDto<BlogPost>
-            {
-                Items = items,
-                Page = pagination.Page,
-                PageSize = pagination.PageSize,
-                TotalItems = TotalItems,
-                TotalPages = (int)Math.Ceiling((double)TotalItems / (double)pagination.PageSize)
-            };
+            var result = await _blogPostService.GetPostsAsync(pagination.Page, pagination.PageSize);
 
             return Ok(result);
-
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(BlogPost), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<BlogPost>> GetPost(int id)
+        public async Task<ActionResult<BlogPostResponseDto>> GetPost(int id)
         {
-            var post = await _dbContext.BlogPosts
-                .AsNoTracking()
-                .FirstOrDefaultAsync(post => post.Id == id);
+            var post = await _blogPostService.GetPostAsync(id);
 
             if (post is null)
             {
@@ -73,13 +41,12 @@ namespace laoyu_blog_backend.Controllers
         }
 
         [HttpGet("by-slug/{slug}")]
-        [ProducesResponseType(typeof(BlogPost), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<BlogPost>> GetPostBySlug(string slug)
+        public async Task<ActionResult<BlogPostResponseDto>> GetPostBySlug(string slug)
         {
-            var post = await _dbContext.BlogPosts
-                .AsNoTracking()
-                .FirstOrDefaultAsync(post => post.Slug == slug);
+            var post = await _blogPostService.GetPostAsync(slug);
+
 
             if (post is null)
             {
@@ -90,8 +57,8 @@ namespace laoyu_blog_backend.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(BlogPost), StatusCodes.Status201Created)]
-        public async Task<ActionResult<BlogPost>> CreatePost([FromBody] BlogPostDto dto)
+        [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status201Created)]
+        public async Task<ActionResult<BlogPostResponseDto>> CreatePost([FromBody] BlogPostDto dto)
         {
             var post = new BlogPost
             {
@@ -100,74 +67,27 @@ namespace laoyu_blog_backend.Controllers
                 Content = dto.Content
             };
 
-            await _dbContext.BlogPosts.AddAsync(post);
-            try
-            {
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateException exception)
-                when (IsSlugConflict(exception))
-            {
-                return Conflict(new ProblemDetails
-                {
-                    Title = "Slug already exists.",
-                    Detail = $"The slug '{dto.Slug}' is already in use.",
-                    Status = StatusCodes.Status409Conflict
-                });
-            }
+            var createdPost = await _blogPostService.CreatePostAsync(post);
 
             return CreatedAtAction(
-                nameof(GetPost),
-                new { id = post.Id },
-                post);
+                    nameof(GetPost),
+                    new { id = createdPost.Id },
+                    createdPost);
         }
 
         [HttpPut("{id:int}")]
-        [ProducesResponseType(typeof(BlogPost), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<BlogPost>> UpdatePost(int id, [FromBody] BlogPostDto dto)
+        public async Task<ActionResult<BlogPostResponseDto>> UpdatePost(int id, [FromBody] BlogPostDto post)
         {
-            var post = await _dbContext.BlogPosts
-                .FirstOrDefaultAsync(post => post.Id == id);
+            var result = await _blogPostService.UpdatePostAsync(id, post);
 
-            if (post is null)
+            if (result is null)
             {
                 return NotFound();
             }
 
-            if (!string.IsNullOrEmpty(dto.Title))
-            {
-                post.Title = dto.Title;
-            }
-
-            if (!string.IsNullOrEmpty(dto.Slug))
-            {
-                post.Slug = dto.Slug;
-            }
-
-            if (!string.IsNullOrEmpty(dto.Content))
-            {
-                post.Content = dto.Content;
-            }
-
-            try
-            {
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateException exception)
-                when (IsSlugConflict(exception))
-            {
-                return Conflict(new ProblemDetails
-                {
-                    Title = "Slug already exists.",
-                    Detail = $"The slug '{dto.Slug}' is already in use.",
-                    Status = StatusCodes.Status409Conflict
-                });
-            }
-
-
-            return Ok(post);
-
+            return Ok(result);
         }
 
         [HttpDelete("{id:int}")]
@@ -175,18 +95,9 @@ namespace laoyu_blog_backend.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> DeletePost(int id)
         {
-            var post = await _dbContext.BlogPosts
-                .FindAsync(id);
+            var isDeleted = await _blogPostService.DeletePostAsync(id);
 
-
-            if (post is null)
-            {
-                return NotFound();
-            }
-
-            _dbContext.BlogPosts.Remove(post);
-
-            await _dbContext.SaveChangesAsync();
+            if (isDeleted is false) return NotFound();
 
             return NoContent();
         }

@@ -1,6 +1,6 @@
 # 从零构建 ASP.NET Core 博客 API
 
-这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose 和 Service Layer 的博客 API。
+这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose、Service Layer 和统一异常处理的博客 API。
 
 文章统一使用：
 
@@ -45,6 +45,9 @@ API Base Route: /api/blogs
 | 16 | [把唯一冲突转换成 409](./10-aspnet-core-postgresql-unique-conflict-409.md) | Npgsql Error Mapping、ProblemDetails | 重复 Slug 返回 409 |
 | 17 | [实现稳定分页](./11-ef-core-stable-pagination.md) | Query DTO、`PagedResult<T>`、Skip/Take | 分页与非法参数测试通过 |
 | 18 | [把分页查询移入 Service](./12a-refactor-pagination-to-service.md) | Scoped `BlogPostService` | 重构前后 Response 一致 |
+| 19 | [把完整 CRUD 迁入 Service](./12b-refactor-crud-to-service.md) | Service CRUD、精简后的 Controller | CRUD 行为不变，Controller 不再依赖 DbContext |
+| 20 | [使用 Response DTO 隔离 EF Core Entity](./12c-use-response-dto-in-service.md) | Response DTO、查询投影、Entity/DTO Mapping | GET、POST、PUT 不再直接返回 Entity |
+| 21 | [使用 IExceptionHandler 统一处理 Slug 冲突](./13-aspnet-core-iexceptionhandler-postgresql-conflict.md) | 具体异常 Handler、ProblemDetails、异常处理中间件 | 重复 Slug 由全局 Pipeline 返回 409 |
 
 ## 概念补充
 
@@ -57,7 +60,10 @@ API Base Route: /api/blogs
 - [OnModelCreating Hook](./04a-ef-core-onmodelcreating-hook.md)
 - [System.Text.Json Attribute](./08a-system-text-json-dto-attributes.md)
 - [Body、Route、Query 与 Header Binding](./08b-aspnet-core-model-binding-sources.md)
+- [ActionFilter 的适用场景与职责边界](./08c-aspnet-core-action-filter-boundaries.md)
 - [什么时候需要 Service Layer](./12-when-to-add-service-layer.md)
+- [读懂 IExceptionHandler 方法契约](./13a-understand-iexceptionhandler-contract.md)
+- [PostgreSQL Sequence 为什么产生 ID 缺口](./14-postgresql-sequence-id-gaps.md)
 
 ## 主线中的状态演进
 
@@ -83,8 +89,19 @@ API 支持 GET /api/blogs/by-slug/{slug}
 ```text
 GET /api/blogs?page=1&pageSize=10
 Controller 负责 HTTP Binding 与 Response
-BlogPostService 负责分页查询
+BlogPostService 负责分页查询和完整 CRUD
 AppDbContext 负责 EF Core 数据访问
+GET、POST、PUT 使用 BlogPostResponseDto
+DELETE 成功返回 204 No Content
+```
+
+### 全局异常处理完成时
+
+```text
+数据库约束负责阻止重复 Slug
+具体 IExceptionHandler 负责把已知冲突转换成 409
+Controller 不再重复捕获相同 DbUpdateException
+未知异常继续进入后续 Handler 或后备错误处理
 ```
 
 ## 最终目录结构
@@ -98,12 +115,15 @@ BlogApi/
 │   └── Migrations/
 ├── Dtos/
 │   ├── BlogPostDto.cs
+│   ├── BlogPostResponseDto.cs
 │   ├── PaginationQueryDto.cs
 │   └── PagedResultDto.cs
 ├── Models/
 │   └── BlogPost.cs
 ├── Services/
 │   └── BlogPostService.cs
+├── Exceptions/
+│   └── SlugConflictExceptionHandler.cs
 ├── scripts/
 │   ├── add-migration.sh
 │   └── update-database.sh

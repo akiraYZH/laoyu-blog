@@ -4,7 +4,7 @@ namespace laoyu_blog_backend.Dtos;
 
 public class BlogPostDto
 {
-    [Required(ErrorMessage = "Title is required!！！！")]
+    [Required(ErrorMessage = "Title is required!")]
     [StringLength(
         200,
         MinimumLength = 1,

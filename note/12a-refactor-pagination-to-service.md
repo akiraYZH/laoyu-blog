@@ -204,4 +204,5 @@ builder.Services.AddScoped<BlogPostService>();
 ## 主线导航
 
 - 上一步：[实现稳定分页](./11-ef-core-stable-pagination.md)
+- 下一步：[把完整 CRUD 迁入 Service](./12b-refactor-crud-to-service.md)
 - 架构补充：[什么时候应该加入 Service Layer](./12-when-to-add-service-layer.md)

@@ -6,7 +6,7 @@ using laoyu_blog_backend.Exceptions;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection")
+    builder.Configuration.GetConnectionString("LaoyuBlog")
     ?? throw new InvalidOperationException(
         "Connection string 'DefaultConnection' was not found.");
 
@@ -25,6 +25,10 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+// use static files for image uploads
+app.UseStaticFiles();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

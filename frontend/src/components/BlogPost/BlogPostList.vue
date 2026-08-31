@@ -1,27 +1,16 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useBlogPostStore } from '@/stores/blogPost'
+import { useBlogPosts } from '@/composables/useBlogPosts'
 import BlogPostCard from './BlogPostCard.vue'
 
-const blogPostStore = useBlogPostStore()
-const { posts, loading, loadError: error, page, pageSize, totalItems } =
-  storeToRefs(blogPostStore)
+const { posts, loading, loadError: error, page, pageSize, totalItems, getPosts } = useBlogPosts()
 
 onMounted(() => {
-  try {
-    blogPostStore.fetchPosts()
-  } catch (e) {
-    console.log(e)
-  }
+  getPosts()
 })
 
 const handlePageChange = (requestedPage: number, requestedPageSize: number) => {
-  try {
-    blogPostStore.fetchPosts(requestedPage, requestedPageSize)
-  } catch (e) {
-    console.log(e)
-  }
+  getPosts(requestedPage, requestedPageSize)
 }
 </script>
 
@@ -39,7 +28,20 @@ const handlePageChange = (requestedPage: number, requestedPageSize: number) => {
     <div v-else>
       <a-space direction="vertical" :size="20">
         <div class="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <BlogPostCard v-for="post in posts" :key="post.id" :post="post" />
+          <div v-for="post in posts" :key="post.id" class="flex flex-col gap-2">
+            <div class="flex justify-end">
+              <RouterLink
+                :to="{
+                  name: 'updateBlog',
+                  params: { slug: post.slug },
+                }"
+              >
+                <a-button>Edit</a-button>
+              </RouterLink>
+            </div>
+
+            <BlogPostCard :post="post" />
+          </div>
         </div>
         <a-flex justify="center">
           <a-pagination

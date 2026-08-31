@@ -13,6 +13,13 @@ export interface BlogPost {
   createdAtUtc: string
 }
 
+export interface BlogPostInput {
+  title: string
+  slug: string
+  content: string
+  categoryNames: string[]
+}
+
 export interface PagedResult<T> {
   items: T[]
   page: number

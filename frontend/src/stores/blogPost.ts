@@ -1,14 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { BlogPost, Category, PagedResult } from '@/types'
+import type { BlogPost, BlogPostInput, Category, PagedResult } from '@/types'
 import { createApiRequestError } from '@/stores/functions/readError'
-
-export interface CreateBlogPostInput {
-  title: string
-  slug: string
-  content: string
-  categoryNames: string[]
-}
 
 export const useBlogPostStore = defineStore('blogPost', () => {
   // 文章列表
@@ -45,7 +38,10 @@ export const useBlogPostStore = defineStore('blogPost', () => {
       totalPages.value = result.totalPages
       totalItems.value = result.totalItems
     } catch (caughtError) {
-      loadError.value = caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
+      loadError.value =
+        caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
+
+      throw caughtError
     } finally {
       loading.value = false
     }
@@ -61,11 +57,14 @@ export const useBlogPostStore = defineStore('blogPost', () => {
 
       categories.value = await response.json()
     } catch (caughtError) {
-      loadError.value = caughtError instanceof Error ? caughtError.message : '获取分类时发生未知错误'
+      loadError.value =
+        caughtError instanceof Error ? caughtError.message : '获取分类时发生未知错误'
+
+      throw caughtError
     }
   }
 
-  async function createBlogPost(input: CreateBlogPostInput): Promise<BlogPost> {
+  async function createBlogPost(input: BlogPostInput): Promise<BlogPost> {
     loading.value = true
 
     try {
@@ -95,6 +94,37 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     }
   }
 
+  async function updateBlogPost(id: number, input: BlogPostInput): Promise<BlogPost> {
+    loading.value = true
+
+    try {
+      const response = await fetch(`/api/blogs/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+      })
+
+      if (!response.ok) {
+        throw await createApiRequestError(response)
+      }
+
+      const updatedPost: BlogPost = await response.json()
+      const postIndex = posts.value.findIndex((post) => post.id === updatedPost.id)
+
+      if (postIndex !== -1) {
+        posts.value[postIndex] = updatedPost
+      }
+
+      currentPost.value = updatedPost
+
+      return updatedPost
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
     loading.value = true
     loadError.value = null
@@ -116,7 +146,8 @@ export const useBlogPostStore = defineStore('blogPost', () => {
 
       return post
     } catch (caughtError) {
-      loadError.value = caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
+      loadError.value =
+        caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
 
       throw caughtError
     } finally {
@@ -153,5 +184,6 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     fetchCategories,
     loadPostBySlug,
     createBlogPost,
+    updateBlogPost,
   }
 })

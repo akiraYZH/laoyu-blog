@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { MdPreview } from 'md-editor-v3'
-import { useBlogPostStore } from '@/stores/blogPost'
+import { useBlogPosts } from '@/composables/useBlogPosts'
 import 'md-editor-v3/lib/preview.css'
 
 const route = useRoute()
 const router = useRouter()
-const blogPostStore = useBlogPostStore()
-const { currentPost, loading, loadError: error } = storeToRefs(blogPostStore)
+const { currentPost, loading, loadError: error, getPost } = useBlogPosts()
 const notFound = ref(false)
 
 function goBack() {
@@ -43,12 +41,8 @@ watch(
       return
     }
 
-    try {
-      const post = await blogPostStore.loadPostBySlug(slug)
-      notFound.value = post === null
-    } catch {
-      // Store 已经保存了供页面展示的错误信息。
-    }
+    const post = await getPost(slug)
+    notFound.value = post === null
   },
   { immediate: true },
 )

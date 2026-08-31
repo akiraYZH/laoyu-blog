@@ -27,6 +27,11 @@ const router = createRouter({
       name: 'blogDetail',
       component: () => import('../views/BlogPostDetailView.vue'),
     },
+    {
+      path: '/blogs/:slug/edit',
+      name: 'updateBlog',
+      component: () => import('../views/UpdateBlogView.vue'),
+    },
   ],
 })
 

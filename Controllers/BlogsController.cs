@@ -60,19 +60,12 @@ namespace laoyu_blog_backend.Controllers
         [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<BlogPostResponseDto>> CreatePost([FromBody] BlogPostDto dto)
         {
-            var post = new BlogPost
-            {
-                Title = dto.Title,
-                Slug = dto.Slug,
-                Content = dto.Content
-            };
-
-            var createdPost = await _blogPostService.CreatePostAsync(post);
+            var createdPost = await _blogPostService.CreatePostAsync(dto);
 
             return CreatedAtAction(
-                    nameof(GetPost),
-                    new { id = createdPost.Id },
-                    createdPost);
+                nameof(GetPost),
+                new { id = createdPost.Id },
+                createdPost);
         }
 
         [HttpPut("{id:int}")]

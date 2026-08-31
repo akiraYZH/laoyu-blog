@@ -1,22 +1,32 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { MdPreview } from 'md-editor-v3'
 import { useBlogPostStore } from '@/stores/blogPost'
 import 'md-editor-v3/lib/preview.css'
 
 const route = useRoute()
+const router = useRouter()
 const blogPostStore = useBlogPostStore()
-const { currentPost, loading, error } = storeToRefs(blogPostStore)
+const { currentPost, loading, loadError: error } = storeToRefs(blogPostStore)
 const notFound = ref(false)
+
+function goBack() {
+  if (window.history.state?.back) {
+    router.back()
+    return
+  }
+
+  router.push({ name: 'home' })
+}
 
 const formattedCreatedAt = computed(() => {
   if (!currentPost.value) {
     return ''
   }
 
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat('en', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -46,6 +56,10 @@ watch(
 
 <template>
   <main>
+    <div class="mb-5">
+      <a-button @click="goBack"> ← Previous </a-button>
+    </div>
+
     <p v-if="loading">Loading...</p>
 
     <p v-else-if="error">

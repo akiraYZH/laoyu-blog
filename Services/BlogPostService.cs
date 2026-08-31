@@ -10,10 +10,12 @@ namespace laoyu_blog_backend.Services
     public class BlogPostService
     {
         private readonly AppDbContext _dbContext;
+        private readonly CategoryService _categoryService;
 
-        public BlogPostService(AppDbContext appDbContext)
+        public BlogPostService(AppDbContext appDbContext, CategoryService categoryService)
         {
             _dbContext = appDbContext;
+            _categoryService = categoryService;
         }
 
         public async Task<PagedResultDto<BlogPostResponseDto>> GetPostsAsync(int page, int pageSize)
@@ -35,6 +37,15 @@ namespace laoyu_blog_backend.Services
                     Slug = post.Slug,
                     Title = post.Title,
                     Content = post.Content,
+                    Categories = post.Categories
+                        .OrderBy(category => category.Name)
+                        .Select(category => new CategoryResponseDto
+                        {
+                            Id = category.Id,
+                            Name = category.Name,
+                            Slug = category.Slug
+                        })
+                        .ToList(),
                     CreatedAtUtc = post.CreatedAtUtc
                 })
                 .ToListAsync();
@@ -63,6 +74,15 @@ namespace laoyu_blog_backend.Services
                     Slug = post.Slug,
                     Title = post.Title,
                     Content = post.Content,
+                    Categories = post.Categories
+                        .OrderBy(category => category.Name)
+                        .Select(category => new CategoryResponseDto
+                        {
+                            Id = category.Id,
+                            Name = category.Name,
+                            Slug = category.Slug
+                        })
+                        .ToList(),
                     CreatedAtUtc = post.CreatedAtUtc
                 })
                 .FirstOrDefaultAsync(post => post.Id == id);
@@ -81,6 +101,15 @@ namespace laoyu_blog_backend.Services
                     Slug = post.Slug,
                     Title = post.Title,
                     Content = post.Content,
+                    Categories = post.Categories
+                        .OrderBy(category => category.Name)
+                        .Select(category => new CategoryResponseDto
+                        {
+                            Id = category.Id,
+                            Name = category.Name,
+                            Slug = category.Slug
+                        })
+                        .ToList(),
                     CreatedAtUtc = post.CreatedAtUtc
                 })
                 .FirstOrDefaultAsync(post => post.Slug == slug);
@@ -89,8 +118,19 @@ namespace laoyu_blog_backend.Services
         }
 
 
-        public async Task<BlogPostResponseDto> CreatePostAsync(BlogPost blogPost)
+        public async Task<BlogPostResponseDto> CreatePostAsync(BlogPostDto dto)
         {
+            var categories = await _categoryService.GetOrCreateAsync(
+                dto.CategoryNames);
+
+            var blogPost = new BlogPost
+            {
+                Title = dto.Title,
+                Slug = dto.Slug,
+                Content = dto.Content,
+                Categories = categories
+            };
+
             await _dbContext.BlogPosts.AddAsync(blogPost);
             await _dbContext.SaveChangesAsync();
 
@@ -100,23 +140,42 @@ namespace laoyu_blog_backend.Services
                 Slug = blogPost.Slug,
                 Title = blogPost.Title,
                 Content = blogPost.Content,
+                Categories = categories
+                    .OrderBy(category => category.Name)
+                    .Select(category => new CategoryResponseDto
+                    {
+                        Id = category.Id,
+                        Name = category.Name,
+                        Slug = category.Slug
+                    })
+                    .ToList(),
                 CreatedAtUtc = blogPost.CreatedAtUtc
             };
         }
 
-        public async Task<BlogPostResponseDto?> UpdatePostAsync(int id, BlogPostDto blogPost)
+        public async Task<BlogPostResponseDto?> UpdatePostAsync(int id, BlogPostDto dto)
         {
             var post = await _dbContext.BlogPosts
-        .FirstOrDefaultAsync(post => post.Id == id);
+                .Include(post => post.Categories)
+                .FirstOrDefaultAsync(post => post.Id == id);
 
             if (post is null)
             {
                 return null;
             }
 
-            post.Title = blogPost.Title;
-            post.Slug = blogPost.Slug;
-            post.Content = blogPost.Content;
+            var categories = await _categoryService.GetOrCreateAsync(
+                dto.CategoryNames);
+
+            post.Title = dto.Title;
+            post.Slug = dto.Slug;
+            post.Content = dto.Content;
+            post.Categories.Clear();
+
+            foreach (var category in categories)
+            {
+                post.Categories.Add(category);
+            }
 
             await _dbContext.SaveChangesAsync();
 
@@ -126,6 +185,15 @@ namespace laoyu_blog_backend.Services
                 Slug = post.Slug,
                 Title = post.Title,
                 Content = post.Content,
+                Categories = categories
+                    .OrderBy(category => category.Name)
+                    .Select(category => new CategoryResponseDto
+                    {
+                        Id = category.Id,
+                        Name = category.Name,
+                        Slug = category.Slug
+                    })
+                    .ToList(),
                 CreatedAtUtc = post.CreatedAtUtc
             };
 

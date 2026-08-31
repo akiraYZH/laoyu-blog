@@ -18,6 +18,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<SlugConflictExceptionHandler>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<BlogPostService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<IImageStorageService, LocalImageStorageService>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

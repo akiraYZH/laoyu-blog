@@ -1,17 +1,20 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { BlogPost, PagedResult } from '@/types'
+import type { BlogPost, Category, PagedResult } from '@/types'
+import { createApiRequestError } from '@/stores/functions/readError'
 
 export interface CreateBlogPostInput {
   title: string
   slug: string
   content: string
+  categoryNames: string[]
 }
 
 export const useBlogPostStore = defineStore('blogPost', () => {
   // 文章列表
   const posts = ref<BlogPost[]>([])
   const currentPost = ref<BlogPost | null>(null)
+  const categories = ref<Category[]>([])
 
   // 分页数据
   const page = ref(1)
@@ -21,11 +24,11 @@ export const useBlogPostStore = defineStore('blogPost', () => {
 
   // 请求状态
   const loading = ref(false)
-  const error = ref<string | null>(null)
+  const loadError = ref<string | null>(null)
 
   async function fetchPosts(requestedPage = 1, requestedPageSize = 10): Promise<void> {
     loading.value = true
-    error.value = null
+    loadError.value = null
 
     try {
       const response = await fetch(`/api/blogs?page=${requestedPage}&pageSize=${requestedPageSize}`)
@@ -42,17 +45,28 @@ export const useBlogPostStore = defineStore('blogPost', () => {
       totalPages.value = result.totalPages
       totalItems.value = result.totalItems
     } catch (caughtError) {
-      error.value = caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
-
-      throw caughtError
+      loadError.value = caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
     } finally {
       loading.value = false
     }
   }
 
+  async function fetchCategories(): Promise<void> {
+    try {
+      const response = await fetch('/api/categories')
+
+      if (!response.ok) {
+        throw new Error(`获取分类失败：HTTP ${response.status}`)
+      }
+
+      categories.value = await response.json()
+    } catch (caughtError) {
+      loadError.value = caughtError instanceof Error ? caughtError.message : '获取分类时发生未知错误'
+    }
+  }
+
   async function createBlogPost(input: CreateBlogPostInput): Promise<BlogPost> {
     loading.value = true
-    error.value = null
 
     try {
       const response = await fetch('/api/blogs', {
@@ -66,7 +80,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
       })
 
       if (!response.ok) {
-        throw new Error(`创建文章失败：HTTP ${response.status}`)
+        throw await createApiRequestError(response)
       }
 
       const createdPost: BlogPost = await response.json()
@@ -76,10 +90,6 @@ export const useBlogPostStore = defineStore('blogPost', () => {
       totalItems.value += 1
 
       return createdPost
-    } catch (caughtError) {
-      error.value = caughtError instanceof Error ? caughtError.message : '创建文章时发生未知错误'
-
-      throw caughtError
     } finally {
       loading.value = false
     }
@@ -87,7 +97,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
 
   async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
     loading.value = true
-    error.value = null
+    loadError.value = null
     currentPost.value = null
 
     try {
@@ -106,7 +116,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
 
       return post
     } catch (caughtError) {
-      error.value = caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
+      loadError.value = caughtError instanceof Error ? caughtError.message : '获取文章时发生未知错误'
 
       throw caughtError
     } finally {
@@ -115,7 +125,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
   }
 
   async function loadPostBySlug(slug: string): Promise<BlogPost | null> {
-    error.value = null
+    loadError.value = null
 
     const cachedPost = posts.value.find((post) => post.slug === slug)
 
@@ -132,13 +142,15 @@ export const useBlogPostStore = defineStore('blogPost', () => {
   return {
     posts,
     currentPost,
+    categories,
     page,
     pageSize,
     totalPages,
     totalItems,
     loading,
-    error,
+    loadError,
     fetchPosts,
+    fetchCategories,
     loadPostBySlug,
     createBlogPost,
   }

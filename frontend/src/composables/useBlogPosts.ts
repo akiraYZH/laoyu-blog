@@ -11,6 +11,7 @@ export function useBlogPosts() {
     posts,
     currentPost,
     categories,
+    selectedCategorySlug,
     page,
     pageSize,
     totalPages,
@@ -37,9 +38,13 @@ export function useBlogPosts() {
     message.error(error instanceof Error ? error.message : fallbackMessage)
   }
 
-  async function getPosts(requestedPage = 1, requestedPageSize = 10): Promise<void> {
+  async function getPosts(
+    requestedPage = 1,
+    requestedPageSize = 10,
+    requestedCategorySlug: string | null = selectedCategorySlug.value,
+  ): Promise<void> {
     try {
-      await store.fetchPosts(requestedPage, requestedPageSize)
+      await store.fetchPosts(requestedPage, requestedPageSize, requestedCategorySlug)
     } catch (error) {
       handleError(error, 'Failed to load posts.')
     }
@@ -102,6 +107,7 @@ export function useBlogPosts() {
     posts,
     currentPost,
     categories,
+    selectedCategorySlug,
     page,
     pageSize,
     totalPages,

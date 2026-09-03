@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useBlogPosts } from '@/composables/useBlogPosts'
 import BlogPostCard from './BlogPostCard.vue'
+
+const route = useRoute()
 
 const {
   posts,
@@ -14,9 +17,13 @@ const {
   deletePost,
 } = useBlogPosts()
 
-onMounted(() => {
-  getPosts()
-})
+watch(
+  () => route.query.category,
+  (category) => {
+    void getPosts(1, pageSize.value, typeof category === 'string' ? category : null)
+  },
+  { immediate: true },
+)
 
 const handlePageChange = (requestedPage: number, requestedPageSize: number) => {
   getPosts(requestedPage, requestedPageSize)
@@ -33,7 +40,8 @@ const handleDelete = async (id: number) => {
 
 <template>
   <section>
-    <h1 class="text-2xl font-bold mb-5">Blog Posts</h1>
+    <h1 class="mb-5 text-2xl font-bold">Blog Posts</h1>
+
     <p v-if="loading">Loading...</p>
 
     <p v-else-if="error">
@@ -59,7 +67,7 @@ const handleDelete = async (id: number) => {
 
                 <a-popconfirm
                   title="Delete this post?"
-                  :description="`This will permanently delete “${post.title}”.`"
+                  :description="`This will permanently delete ${post.title}.`"
                   ok-text="Delete"
                   cancel-text="Cancel"
                   :ok-button-props="{ danger: true }"

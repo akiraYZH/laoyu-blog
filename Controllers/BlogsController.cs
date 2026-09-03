@@ -20,7 +20,10 @@ namespace laoyu_blog_backend.Controllers
         [ProducesResponseType(typeof(PagedResultDto<BlogPostResponseDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<PagedResultDto<BlogPostResponseDto>>> GetPosts([FromQuery] PaginationQueryDto pagination)
         {
-            var result = await _blogPostService.GetPostsAsync(pagination.Page, pagination.PageSize);
+            var result = await _blogPostService.GetPostsAsync(
+                pagination.Page,
+                pagination.PageSize,
+                pagination.CategorySlug);
 
             return Ok(result);
         }

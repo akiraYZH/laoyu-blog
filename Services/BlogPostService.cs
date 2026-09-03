@@ -18,17 +18,27 @@ namespace laoyu_blog_backend.Services
             _categoryService = categoryService;
         }
 
-        public async Task<PagedResultDto<BlogPostResponseDto>> GetPostsAsync(int page, int pageSize)
+        public async Task<PagedResultDto<BlogPostResponseDto>> GetPostsAsync(
+            int page,
+            int pageSize,
+            string? categorySlug)
         {
-
             var query = _dbContext.BlogPosts
-                .AsNoTracking()
+                .AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(categorySlug))
+            {
+                query = query.Where(post =>
+                    post.Categories.Any(category => category.Slug == categorySlug));
+            }
+
+            var orderedQuery = query
                 .OrderByDescending(post => post.CreatedAtUtc)
                 .ThenByDescending(post => post.Id);
 
             var totalItems = await query.CountAsync();
 
-            var items = await query
+            var items = await orderedQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(post => new BlogPostResponseDto

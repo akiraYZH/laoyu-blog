@@ -8,6 +8,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
   const posts = ref<BlogPost[]>([])
   const currentPost = ref<BlogPost | null>(null)
   const categories = ref<Category[]>([])
+  const selectedCategorySlug = ref<string | null>(null)
 
   // 分页数据
   const page = ref(1)
@@ -19,12 +20,26 @@ export const useBlogPostStore = defineStore('blogPost', () => {
   const loading = ref(false)
   const loadError = ref<string | null>(null)
 
-  async function fetchPosts(requestedPage = 1, requestedPageSize = 10): Promise<void> {
+  async function fetchPosts(
+    requestedPage = 1,
+    requestedPageSize = 10,
+    requestedCategorySlug: string | null = selectedCategorySlug.value,
+  ): Promise<void> {
     loading.value = true
     loadError.value = null
+    selectedCategorySlug.value = requestedCategorySlug
 
     try {
-      const response = await fetch(`/api/blogs?page=${requestedPage}&pageSize=${requestedPageSize}`)
+      const searchParams = new URLSearchParams({
+        page: String(requestedPage),
+        pageSize: String(requestedPageSize),
+      })
+
+      if (requestedCategorySlug) {
+        searchParams.set('categorySlug', requestedCategorySlug)
+      }
+
+      const response = await fetch(`/api/blogs?${searchParams.toString()}`)
 
       if (!response.ok) {
         throw new Error(`获取文章失败：HTTP ${response.status}`)
@@ -199,6 +214,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     posts,
     currentPost,
     categories,
+    selectedCategorySlug,
     page,
     pageSize,
     totalPages,

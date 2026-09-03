@@ -9,4 +9,7 @@ public class PaginationQueryDto
 
     [Range(1, 100, ErrorMessage = "Page size must be between 1 and 100.")]
     public int PageSize { get; set; } = 10;
+
+    [StringLength(100, ErrorMessage = "Category slug cannot exceed 100 characters.")]
+    public string? CategorySlug { get; set; }
 }

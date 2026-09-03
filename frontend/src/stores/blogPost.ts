@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { defineStore } from 'pinia'
+import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { BlogPost, BlogPostInput, Category, PagedResult } from '@/types'
 import { createApiRequestError } from '@/stores/functions/readError'
 
@@ -125,6 +125,31 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     }
   }
 
+  async function deleteBlogPost(id: number): Promise<void> {
+    loading.value = true
+
+    try {
+      const response = await fetch(`/api/blogs/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw await createApiRequestError(response)
+      }
+
+      posts.value = posts.value.filter((post) => post.id !== id)
+
+      if (currentPost.value?.id === id) {
+        currentPost.value = null
+      }
+
+      totalItems.value = Math.max(0, totalItems.value - 1)
+      totalPages.value = Math.ceil(totalItems.value / pageSize.value)
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
     loading.value = true
     loadError.value = null
@@ -185,5 +210,10 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     loadPostBySlug,
     createBlogPost,
     updateBlogPost,
+    deleteBlogPost,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useBlogPostStore, import.meta.hot))
+}

@@ -86,6 +86,18 @@ export function useBlogPosts() {
     }
   }
 
+  async function deletePost(id: number): Promise<boolean> {
+    try {
+      await store.deleteBlogPost(id)
+      message.success('Post deleted successfully.')
+
+      return true
+    } catch (error) {
+      handleError(error, 'Failed to delete post.')
+      return false
+    }
+  }
+
   return {
     posts,
     currentPost,
@@ -101,5 +113,6 @@ export function useBlogPosts() {
     getCategories,
     createPost,
     updatePost,
+    deletePost,
   }
 }

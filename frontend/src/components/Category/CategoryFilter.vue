@@ -1,20 +1,28 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useBlogPosts } from '@/composables/useBlogPosts'
 
+const route = useRoute()
 const router = useRouter()
-const { categories, selectedCategorySlug, getCategories } = useBlogPosts()
+const { categories, getCategories } = useBlogPosts()
+
+const isAllActive = computed(() => route.name === 'home')
+
+const activeCategorySlug = computed(() =>
+  route.name === 'categoryPosts' && typeof route.params.slug === 'string'
+    ? route.params.slug
+    : null,
+)
 
 onMounted(() => {
   void getCategories()
 })
 
 const handleCategorySelect = (categorySlug: string | null) => {
-  void router.push({
-    name: 'home',
-    query: categorySlug ? { category: categorySlug } : {},
-  })
+  void router.push(
+    categorySlug ? { name: 'categoryPosts', params: { slug: categorySlug } } : { name: 'home' },
+  )
 }
 </script>
 
@@ -25,11 +33,11 @@ const handleCategorySelect = (categorySlug: string | null) => {
         type="button"
         class="border-b-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors"
         :class="
-          selectedCategorySlug === null
+          isAllActive
             ? 'border-emerald-400 bg-slate-800 text-white!'
             : 'border-transparent text-slate-200! hover:bg-slate-800 hover:text-white!'
         "
-        :aria-pressed="selectedCategorySlug === null"
+        :aria-pressed="isAllActive"
         @click="handleCategorySelect(null)"
       >
         All
@@ -41,11 +49,11 @@ const handleCategorySelect = (categorySlug: string | null) => {
         type="button"
         class="border-b-2 px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors"
         :class="
-          selectedCategorySlug === category.slug
+          activeCategorySlug === category.slug
             ? 'border-emerald-400 bg-slate-800 text-white!'
             : 'border-transparent text-slate-200! hover:bg-slate-800 hover:text-white!'
         "
-        :aria-pressed="selectedCategorySlug === category.slug"
+        :aria-pressed="activeCategorySlug === category.slug"
         @click="handleCategorySelect(category.slug)"
       >
         {{ category.name }}

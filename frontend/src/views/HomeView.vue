@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import BlogPostList from '@/components/BlogPost/BlogPostList.vue'
+import CategoryFolderList from '@/components/Category/CategoryFolderList.vue'
 </script>
 
 <template>
   <main>
-    <BlogPostList />
+    <CategoryFolderList />
   </main>
 </template>

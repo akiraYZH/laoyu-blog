@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { watch } from 'vue'
-import { useRoute } from 'vue-router'
 import { useBlogPosts } from '@/composables/useBlogPosts'
 import BlogPostCard from './BlogPostCard.vue'
 
-const route = useRoute()
+const props = defineProps<{
+  categorySlug: string
+}>()
 
 const {
   posts,
@@ -18,22 +19,22 @@ const {
 } = useBlogPosts()
 
 watch(
-  () => route.query.category,
-  (category) => {
-    void getPosts(1, pageSize.value, typeof category === 'string' ? category : null)
+  () => props.categorySlug,
+  (categorySlug) => {
+    void getPosts(1, pageSize.value, categorySlug)
   },
   { immediate: true },
 )
 
 const handlePageChange = (requestedPage: number, requestedPageSize: number) => {
-  getPosts(requestedPage, requestedPageSize)
+  getPosts(requestedPage, requestedPageSize, props.categorySlug)
 }
 
 const handleDelete = async (id: number) => {
   const deleted = await deletePost(id)
 
   if (deleted && posts.value.length === 0 && page.value > 1) {
-    await getPosts(page.value - 1, pageSize.value)
+    await getPosts(page.value - 1, pageSize.value, props.categorySlug)
   }
 }
 </script>

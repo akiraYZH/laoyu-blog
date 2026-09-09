@@ -2,6 +2,7 @@
 import { watch } from 'vue'
 import { useBlogPosts } from '@/composables/useBlogPosts'
 import BlogPostCard from './BlogPostCard.vue'
+import { useAuth } from '@/composables/useAuth'
 
 const props = defineProps<{
   categorySlug: string
@@ -17,6 +18,7 @@ const {
   getPosts,
   deletePost,
 } = useBlogPosts()
+const { isAuthenticated } = useAuth()
 
 watch(
   () => props.categorySlug,
@@ -55,7 +57,7 @@ const handleDelete = async (id: number) => {
       <a-space direction="vertical" :size="20">
         <div class="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <div v-for="post in posts" :key="post.id" class="flex flex-col gap-2">
-            <div class="flex justify-end">
+            <div v-if="isAuthenticated" class="flex justify-end">
               <a-space>
                 <RouterLink
                   :to="{

@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using laoyu_blog_backend.Models;
 
 namespace laoyu_blog_backend.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<ApplicationUser>
 {
-
     public AppDbContext(DbContextOptions<AppDbContext> options)
     : base(options)
     {

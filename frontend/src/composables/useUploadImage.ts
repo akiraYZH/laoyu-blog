@@ -1,6 +1,8 @@
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
 import type { UploadImgEvent } from 'md-editor-v3'
+import { apiFetch } from '@/api/apiFetch'
+import { createApiRequestError } from '@/stores/functions/readError'
 
 interface UploadImageResponse {
   url: string
@@ -29,13 +31,13 @@ export function useUploadImage() {
     uploading.value = true
 
     try {
-      const response = await fetch('/api/images', {
+      const response = await apiFetch('/api/images', {
         method: 'POST',
         body: formData,
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to upload Image: HTTP ${response.status}`)
+        throw await createApiRequestError(response)
       }
 
       const result: UploadImageResponse = await response.json()

@@ -23,7 +23,7 @@ up:
 	$(COMPOSE) up --detach --build
 	
 dev:
-	$(COMPOSE) up --watch
+	$(COMPOSE) up --watch --build
 
 down:
 	$(COMPOSE) down

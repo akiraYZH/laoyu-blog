@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using laoyu_blog_backend.Models;
 using laoyu_blog_backend.Dtos;
 using laoyu_blog_backend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace laoyu_blog_backend.Controllers
 {
@@ -59,6 +60,7 @@ namespace laoyu_blog_backend.Controllers
             return Ok(post);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<BlogPostResponseDto>> CreatePost([FromBody] BlogPostDto dto)
@@ -71,6 +73,7 @@ namespace laoyu_blog_backend.Controllers
                 createdPost);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id:int}")]
         [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -86,6 +89,7 @@ namespace laoyu_blog_backend.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

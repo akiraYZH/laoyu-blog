@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { BlogPost, BlogPostInput, Category, PagedResult } from '@/types'
 import { createApiRequestError } from '@/stores/functions/readError'
+import { apiFetch } from '@/api/apiFetch'
 
 export const useBlogPostStore = defineStore('blogPost', () => {
   // 文章列表
@@ -83,7 +84,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     loading.value = true
 
     try {
-      const response = await fetch('/api/blogs', {
+      const response = await apiFetch('/api/blogs', {
         method: 'POST',
 
         headers: {
@@ -113,7 +114,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     loading.value = true
 
     try {
-      const response = await fetch(`/api/blogs/${id}`, {
+      const response = await apiFetch(`/api/blogs/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     loading.value = true
 
     try {
-      const response = await fetch(`/api/blogs/${id}`, {
+      const response = await apiFetch(`/api/blogs/${id}`, {
         method: 'DELETE',
       })
 

@@ -1,1 +1,2 @@
-export * from "./blogPost";
+export * from './blogPost'
+export * from './auth'

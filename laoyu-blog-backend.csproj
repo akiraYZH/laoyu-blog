@@ -6,11 +6,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>laoyu_blog_backend</RootNamespace>
     <DefaultItemExcludes>
-    $(DefaultItemExcludes);**/wwwroot/uploads/**
-  </DefaultItemExcludes>
+      $(DefaultItemExcludes);
+      **/wwwroot/uploads/**;
+      tests/**
+    </DefaultItemExcludes>
+
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

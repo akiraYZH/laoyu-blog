@@ -245,3 +245,4 @@ Controller → 不再包含重复的数据库异常 catch
 ## 主线导航
 
 - 上一步：[使用 Response DTO 隔离 EF Core Entity](./12c-use-response-dto-in-service.md)
+- 下一步：[使用 EF Core 为博客文章加入多分类](./14a-model-blog-categories-many-to-many.md)

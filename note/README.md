@@ -1,6 +1,6 @@
 # 从零构建 ASP.NET Core 博客 API
 
-这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose、Service Layer 和统一异常处理的博客 API。
+这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose、Service Layer、统一异常处理、Identity 管理员和 JWT 角色授权的博客 API。
 
 文章统一使用：
 
@@ -48,6 +48,12 @@ API Base Route: /api/blogs
 | 19 | [把完整 CRUD 迁入 Service](./12b-refactor-crud-to-service.md) | Service CRUD、精简后的 Controller | CRUD 行为不变，Controller 不再依赖 DbContext |
 | 20 | [使用 Response DTO 隔离 EF Core Entity](./12c-use-response-dto-in-service.md) | Response DTO、查询投影、Entity/DTO Mapping | GET、POST、PUT 不再直接返回 Entity |
 | 21 | [使用 IExceptionHandler 统一处理 Slug 冲突](./13-aspnet-core-iexceptionhandler-postgresql-conflict.md) | 具体异常 Handler、ProblemDetails、异常处理中间件 | 重复 Slug 由全局 Pipeline 返回 409 |
+| 22 | [使用 EF Core 为文章加入多分类](./14a-model-blog-categories-many-to-many.md) | Category、Many-to-many、Join Table | Category 和 BlogPost 多对多关系可查询 |
+| 23 | [自动创建分类并按分类筛选文章](./14b-create-and-filter-blog-categories.md) | CategoryService、分类列表、Database Filter | 新分类自动建立，分页统计基于筛选结果 |
+| 24 | [建立本地图片上传 API](./14c-build-local-image-upload-api.md) | Upload Controller、Image Storage Service、Static Files | 上传返回 URL，重建 Container 后文件仍存在 |
+| 25 | [加入 Identity 管理员](./15-add-aspnet-core-identity-admin.md) | ApplicationUser、Identity Tables、AdminSeeder | 管理员和 Admin 角色只初始化一次 |
+| 26 | [登录并签发 JWT](./15a-issue-jwt-access-token.md) | Login DTO、AuthController、JwtTokenService | 正确账号返回 Access Token，错误账号返回 401 |
+| 27 | [使用 JWT Bearer 保护写接口](./15b-protect-blog-write-endpoints-jwt.md) | Bearer Validation、Authentication Middleware、Role Authorization | 游客可读，只有 Admin 可以写入和上传 |
 
 ## 概念补充
 
@@ -104,24 +110,68 @@ Controller 不再重复捕获相同 DbUpdateException
 未知异常继续进入后续 Handler 或后备错误处理
 ```
 
+### 分类与图片上传完成时
+
+```text
+BlogPost ← BlogPostCategories → Category
+CategoryService → 复用已有分类并创建缺失分类
+GET /api/blogs?categorySlug=... → 在数据库中筛选后分页
+POST /api/images → 单张图片写入 wwwroot/uploads
+UseStaticFiles → 通过 /uploads/... 返回图片
+Docker Bind Mount → 重建 Container 后保留上传文件
+```
+
+### Identity 与 JWT 授权完成时
+
+```text
+ApplicationUser + IdentityDbContext → 保存用户、密码哈希和角色
+AdminSeeder → 启动时初始化管理员和 Admin 角色
+POST /api/auth/login → 验证密码并签发 JWT
+UseAuthentication → 验证 Bearer Token 并建立 HttpContext.User
+UseAuthorization → 检查 [Authorize(Roles = "Admin")]
+GET → 游客可访问
+POST、PUT、DELETE、图片上传 → 只有 Admin 可访问
+```
+
 ## 最终目录结构
 
 ```text
 BlogApi/
 ├── Controllers/
-│   └── BlogsController.cs
+│   ├── AuthController.cs
+│   ├── BlogsController.cs
+│   ├── CategoriesController.cs
+│   └── UploadsController.cs
 ├── Data/
 │   ├── AppDbContext.cs
+│   ├── Seeding/
+│   │   └── AdminSeeder.cs
 │   └── Migrations/
 ├── Dtos/
 │   ├── BlogPostDto.cs
 │   ├── BlogPostResponseDto.cs
+│   ├── CategoryResponseDto.cs
+│   ├── LoginDto.cs
+│   ├── LoginResponseDto.cs
 │   ├── PaginationQueryDto.cs
-│   └── PagedResultDto.cs
+│   ├── PagedResultDto.cs
+│   └── UploadImageRequestDto.cs
 ├── Models/
-│   └── BlogPost.cs
+│   ├── ApplicationUser.cs
+│   ├── BlogPost.cs
+│   └── Category.cs
+├── Options/
+│   └── JwtOptions.cs
 ├── Services/
-│   └── BlogPostService.cs
+│   ├── Auth/
+│   │   ├── JwtTokenResult.cs
+│   │   └── JwtTokenService.cs
+│   ├── ImageStorage/
+│   │   ├── IImageStorageService.cs
+│   │   ├── ImageUploadResult.cs
+│   │   └── LocalImageStorageService.cs
+│   ├── BlogPostService.cs
+│   └── CategoryService.cs
 ├── Exceptions/
 │   └── SlugConflictExceptionHandler.cs
 ├── scripts/

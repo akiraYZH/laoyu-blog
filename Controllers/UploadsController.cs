@@ -1,9 +1,11 @@
 using laoyu_blog_backend.Dtos;
 using laoyu_blog_backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace laoyu_blog_backend.Controllers;
 
+[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api")]
 public class UploadsController : ControllerBase

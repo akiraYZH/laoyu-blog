@@ -19,4 +19,32 @@ public class BlogPost
     public DateTime? PublishedAtUtc { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    public bool Publish()
+    {
+        if (Status == BlogPostStatus.Published
+            && PublishedAtUtc is not null)
+        {
+            return false;
+        }
+
+        Status = BlogPostStatus.Published;
+        PublishedAtUtc = DateTime.UtcNow;
+
+        return true;
+    }
+
+    public bool Unpublish()
+    {
+        if (Status == BlogPostStatus.Draft
+            && PublishedAtUtc is null)
+        {
+            return false;
+        }
+
+        Status = BlogPostStatus.Draft;
+        PublishedAtUtc = null;
+
+        return true;
+    }
 }

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using laoyu_blog_backend.Services;
 using laoyu_blog_backend.Exceptions;
 using laoyu_blog_backend.Data.Seeding;
+using laoyu_blog_backend.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -124,6 +125,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseMiddleware<RequestLogContextMiddleware>();
 app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapControllers();

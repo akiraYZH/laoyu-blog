@@ -11,11 +11,16 @@ namespace laoyu_blog_backend.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly CategoryService _categoryService;
+        private readonly ILogger<BlogPostService> _logger;
 
-        public BlogPostService(AppDbContext appDbContext, CategoryService categoryService)
+        public BlogPostService(
+            AppDbContext appDbContext,
+            CategoryService categoryService,
+            ILogger<BlogPostService> logger)
         {
             _dbContext = appDbContext;
             _categoryService = categoryService;
+            _logger = logger;
         }
 
         private IQueryable<BlogPost> BuildReadablePostsQuery(bool includeDrafts)
@@ -166,6 +171,10 @@ namespace laoyu_blog_backend.Services
             await _dbContext.BlogPosts.AddAsync(blogPost);
             await _dbContext.SaveChangesAsync();
 
+            _logger.LogInformation(
+                "Blog post {PostId} created.",
+                blogPost.Id);
+
             return new BlogPostResponseDto
             {
                 Id = blogPost.Id,
@@ -195,6 +204,10 @@ namespace laoyu_blog_backend.Services
 
             if (post is null)
             {
+                _logger.LogWarning(
+                    "Blog post {PostId} was not found for update.",
+                    id);
+
                 return null;
             }
 
@@ -212,6 +225,10 @@ namespace laoyu_blog_backend.Services
             }
 
             await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Blog post {PostId} updated.",
+                post.Id);
 
             return new BlogPostResponseDto
             {
@@ -243,16 +260,20 @@ namespace laoyu_blog_backend.Services
 
             if (post is null)
             {
+                _logger.LogWarning(
+                    "Blog post {PostId} was not found for publishing.",
+                    id);
+
                 return null;
             }
 
-            if (post.Status != BlogPostStatus.Published
-                || post.PublishedAtUtc is null)
+            if (post.Publish())
             {
-                post.Status = BlogPostStatus.Published;
-                post.PublishedAtUtc ??= DateTime.UtcNow;
-
                 await _dbContext.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Blog post {PostId} published.",
+                    post.Id);
             }
 
             return new BlogPostResponseDto
@@ -284,16 +305,20 @@ namespace laoyu_blog_backend.Services
 
             if (post is null)
             {
+                _logger.LogWarning(
+                    "Blog post {PostId} was not found for unpublishing.",
+                    id);
+
                 return null;
             }
 
-            if (post.Status != BlogPostStatus.Draft
-                || post.PublishedAtUtc is not null)
+            if (post.Unpublish())
             {
-                post.Status = BlogPostStatus.Draft;
-                post.PublishedAtUtc = null;
-
                 await _dbContext.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Blog post {PostId} unpublished.",
+                    post.Id);
             }
 
             return new BlogPostResponseDto
@@ -322,11 +347,22 @@ namespace laoyu_blog_backend.Services
             var post = await _dbContext.BlogPosts
                 .FindAsync(id);
 
-            if (post is null) return false;
+            if (post is null)
+            {
+                _logger.LogWarning(
+                    "Blog post {PostId} was not found for deletion.",
+                    id);
+
+                return false;
+            }
 
             _dbContext.BlogPosts.Remove(post);
 
             await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Blog post {PostId} deleted.",
+                post.Id);
 
             return true;
 

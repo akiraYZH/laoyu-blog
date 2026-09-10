@@ -4,12 +4,16 @@ export interface Category {
   slug: string
 }
 
+export type BlogPostStatus = 'Draft' | 'Published'
+
 export interface BlogPost {
   id: number
   slug: string
   title: string
   content: string
   categories: Category[]
+  status: BlogPostStatus
+  publishedAtUtc: string | null
   createdAtUtc: string
 }
 

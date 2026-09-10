@@ -18,6 +18,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     develop:
       watch:
         - action: sync
@@ -47,7 +54,8 @@ services:
     ports:
       - "5173:5173"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     develop:
       watch:
         - action: sync

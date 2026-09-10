@@ -91,6 +91,30 @@ export function useBlogPosts() {
     }
   }
 
+  async function publishPost(id: number): Promise<BlogPost | null> {
+    try {
+      const publishedPost = await store.publishBlogPost(id)
+      message.success('Post published successfully.')
+
+      return publishedPost
+    } catch (error) {
+      handleError(error, 'Failed to publish post.')
+      return null
+    }
+  }
+
+  async function unpublishPost(id: number): Promise<BlogPost | null> {
+    try {
+      const unpublishedPost = await store.unpublishBlogPost(id)
+      message.success('Post unpublished successfully.')
+
+      return unpublishedPost
+    } catch (error) {
+      handleError(error, 'Failed to unpublish post.')
+      return null
+    }
+  }
+
   async function deletePost(id: number): Promise<boolean> {
     try {
       await store.deleteBlogPost(id)
@@ -119,6 +143,8 @@ export function useBlogPosts() {
     getCategories,
     createPost,
     updatePost,
+    publishPost,
+    unpublishPost,
     deletePost,
   }
 }

@@ -32,5 +32,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         .HasMany(post => post.Categories)
         .WithMany(category => category.BlogPosts)
         .UsingEntity("BlogPostCategories");
+
+        modelBuilder.Entity<BlogPost>()
+        .Property(post => post.Status)
+        .HasConversion<string>()
+        .HasMaxLength(20);
     }
 }

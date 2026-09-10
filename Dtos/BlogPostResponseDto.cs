@@ -8,5 +8,7 @@ public class BlogPostResponseDto
     public string Content { get; set; } = string.Empty;
 
     public List<CategoryResponseDto> Categories { get; set; } = [];
+    public string Status { get; set; } = string.Empty;
     public DateTime CreatedAtUtc { get; set; }
+    public DateTime? PublishedAtUtc { get; set; }
 }

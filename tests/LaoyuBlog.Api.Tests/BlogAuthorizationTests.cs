@@ -204,6 +204,98 @@ public sealed class BlogAuthorizationTests
 
 
     [Fact]
+    public async Task PublishPost_WithAdminToken_MakesDraftPubliclyReadable()
+    {
+        await AuthenticateAsAdminAsync();
+
+        var createdPost = await CreateTestPostAsync(
+            "Draft Publication Test",
+            "draft-publication-test",
+            "This draft becomes public after publishing.");
+
+        Assert.Equal("Draft", createdPost.Status);
+        Assert.Null(createdPost.PublishedAtUtc);
+
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var draftResponse = await _client.GetAsync(
+            $"/api/blogs/{createdPost.Id}");
+
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            draftResponse.StatusCode);
+
+        await AuthenticateAsAdminAsync();
+
+        var publishResponse = await _client.PostAsync(
+            $"/api/blogs/{createdPost.Id}/publish",
+            content: null);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            publishResponse.StatusCode);
+
+        var publishedPost = await publishResponse.Content
+            .ReadFromJsonAsync<BlogPostResponseDto>();
+
+        Assert.NotNull(publishedPost);
+        Assert.Equal("Published", publishedPost.Status);
+        Assert.NotNull(publishedPost.PublishedAtUtc);
+
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var publicResponse = await _client.GetAsync(
+            $"/api/blogs/{createdPost.Id}");
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            publicResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnpublishPost_WithAdminToken_MakesPublishedPostPrivate()
+    {
+        await AuthenticateAsAdminAsync();
+
+        var createdPost = await CreateTestPostAsync(
+            "Unpublish Integration Test",
+            "unpublish-integration-test",
+            "This published post becomes private again.");
+
+        var publishResponse = await _client.PostAsync(
+            $"/api/blogs/{createdPost.Id}/publish",
+            content: null);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            publishResponse.StatusCode);
+
+        var unpublishResponse = await _client.PostAsync(
+            $"/api/blogs/{createdPost.Id}/unpublish",
+            content: null);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            unpublishResponse.StatusCode);
+
+        var unpublishedPost = await unpublishResponse.Content
+            .ReadFromJsonAsync<BlogPostResponseDto>();
+
+        Assert.NotNull(unpublishedPost);
+        Assert.Equal("Draft", unpublishedPost.Status);
+        Assert.Null(unpublishedPost.PublishedAtUtc);
+
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var publicResponse = await _client.GetAsync(
+            $"/api/blogs/{createdPost.Id}");
+
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            publicResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task CreatePost_WithNonAdminToken_ReturnsForbidden()
     {
         const string email = "user@test.local";

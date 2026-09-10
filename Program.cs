@@ -23,6 +23,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>();
+
+builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {
         options.User.RequireUniqueEmail = true;
@@ -121,6 +125,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();

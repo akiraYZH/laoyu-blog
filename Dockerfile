@@ -1,5 +1,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS development
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /src
 
 COPY ["laoyu-blog-backend.csproj", "./"]
@@ -26,6 +30,10 @@ RUN dotnet publish "laoyu-blog-backend.csproj" \
 
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

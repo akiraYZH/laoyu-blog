@@ -16,6 +16,8 @@ const {
   pageSize,
   totalItems,
   getPosts,
+  publishPost,
+  unpublishPost,
   deletePost,
 } = useBlogPosts()
 const { isAuthenticated } = useAuth()
@@ -30,6 +32,14 @@ watch(
 
 const handlePageChange = (requestedPage: number, requestedPageSize: number) => {
   getPosts(requestedPage, requestedPageSize, props.categorySlug)
+}
+
+const handlePublish = async (id: number) => {
+  await publishPost(id)
+}
+
+const handleUnpublish = async (id: number) => {
+  await unpublishPost(id)
 }
 
 const handleDelete = async (id: number) => {
@@ -57,8 +67,31 @@ const handleDelete = async (id: number) => {
       <a-space direction="vertical" :size="20">
         <div class="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <div v-for="post in posts" :key="post.id" class="flex flex-col gap-2">
-            <div v-if="isAuthenticated" class="flex justify-end">
+            <div v-if="isAuthenticated" class="flex items-center justify-between">
+              <a-tag :color="post.status === 'Draft' ? 'orange' : 'green'" class="m-0!">
+                {{ post.status }}
+              </a-tag>
+
               <a-space>
+                <a-button
+                  v-if="post.status === 'Draft'"
+                  type="primary"
+                  @click="handlePublish(post.id)"
+                >
+                  Publish
+                </a-button>
+
+                <a-popconfirm
+                  v-if="post.status === 'Published'"
+                  title="Unpublish this post?"
+                  :description="`This will hide ${post.title} from visitors.`"
+                  ok-text="Unpublish"
+                  cancel-text="Cancel"
+                  @confirm="handleUnpublish(post.id)"
+                >
+                  <a-button>Unpublish</a-button>
+                </a-popconfirm>
+
                 <RouterLink
                   :to="{
                     name: 'updateBlog',

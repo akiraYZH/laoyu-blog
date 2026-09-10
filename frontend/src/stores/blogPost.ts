@@ -40,7 +40,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
         searchParams.set('categorySlug', requestedCategorySlug)
       }
 
-      const response = await fetch(`/api/blogs?${searchParams.toString()}`)
+      const response = await apiFetch(`/api/blogs?${searchParams.toString()}`)
 
       if (!response.ok) {
         throw new Error(`获取文章失败：HTTP ${response.status}`)
@@ -141,6 +141,64 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     }
   }
 
+  async function publishBlogPost(id: number): Promise<BlogPost> {
+    loading.value = true
+
+    try {
+      const response = await apiFetch(`/api/blogs/${id}/publish`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw await createApiRequestError(response)
+      }
+
+      const publishedPost: BlogPost = await response.json()
+      const postIndex = posts.value.findIndex((post) => post.id === publishedPost.id)
+
+      if (postIndex !== -1) {
+        posts.value[postIndex] = publishedPost
+      }
+
+      if (currentPost.value?.id === publishedPost.id) {
+        currentPost.value = publishedPost
+      }
+
+      return publishedPost
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function unpublishBlogPost(id: number): Promise<BlogPost> {
+    loading.value = true
+
+    try {
+      const response = await apiFetch(`/api/blogs/${id}/unpublish`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw await createApiRequestError(response)
+      }
+
+      const unpublishedPost: BlogPost = await response.json()
+      const postIndex = posts.value.findIndex((post) => post.id === unpublishedPost.id)
+
+      if (postIndex !== -1) {
+        posts.value[postIndex] = unpublishedPost
+      }
+
+      if (currentPost.value?.id === unpublishedPost.id) {
+        currentPost.value = unpublishedPost
+      }
+
+      return unpublishedPost
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function deleteBlogPost(id: number): Promise<void> {
     loading.value = true
 
@@ -172,7 +230,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     currentPost.value = null
 
     try {
-      const response = await fetch(`/api/blogs/by-slug/${encodeURIComponent(slug)}`)
+      const response = await apiFetch(`/api/blogs/by-slug/${encodeURIComponent(slug)}`)
 
       if (response.status === 404) {
         return null
@@ -227,6 +285,8 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     loadPostBySlug,
     createBlogPost,
     updateBlogPost,
+    publishBlogPost,
+    unpublishBlogPost,
     deleteBlogPost,
   }
 })

@@ -18,13 +18,27 @@ namespace laoyu_blog_backend.Services
             _categoryService = categoryService;
         }
 
-        public async Task<PagedResultDto<BlogPostResponseDto>> GetPostsAsync(
-            int page,
-            int pageSize,
-            string? categorySlug)
+        private IQueryable<BlogPost> BuildReadablePostsQuery(bool includeDrafts)
         {
             var query = _dbContext.BlogPosts
                 .AsNoTracking();
+
+            if (!includeDrafts)
+            {
+                query = query.Where(post =>
+                    post.Status == BlogPostStatus.Published);
+            }
+
+            return query;
+        }
+
+        public async Task<PagedResultDto<BlogPostResponseDto>> GetPostsAsync(
+            int page,
+            int pageSize,
+            string? categorySlug,
+            bool includeDrafts)
+        {
+            var query = BuildReadablePostsQuery(includeDrafts);
 
             if (!string.IsNullOrWhiteSpace(categorySlug))
             {
@@ -56,6 +70,8 @@ namespace laoyu_blog_backend.Services
                             Slug = category.Slug
                         })
                         .ToList(),
+                    Status = post.Status.ToString(),
+                    PublishedAtUtc = post.PublishedAtUtc,
                     CreatedAtUtc = post.CreatedAtUtc
                 })
                 .ToListAsync();
@@ -74,10 +90,11 @@ namespace laoyu_blog_backend.Services
         }
 
 
-        public async Task<BlogPostResponseDto?> GetPostAsync(int id)
+        public async Task<BlogPostResponseDto?> GetPostAsync(
+            int id,
+            bool includeDrafts)
         {
-            var post = await _dbContext.BlogPosts
-                .AsNoTracking()
+            var post = await BuildReadablePostsQuery(includeDrafts)
                 .Select(post => new BlogPostResponseDto
                 {
                     Id = post.Id,
@@ -93,6 +110,8 @@ namespace laoyu_blog_backend.Services
                             Slug = category.Slug
                         })
                         .ToList(),
+                    Status = post.Status.ToString(),
+                    PublishedAtUtc = post.PublishedAtUtc,
                     CreatedAtUtc = post.CreatedAtUtc
                 })
                 .FirstOrDefaultAsync(post => post.Id == id);
@@ -101,10 +120,11 @@ namespace laoyu_blog_backend.Services
             return post;
         }
 
-        public async Task<BlogPostResponseDto?> GetPostAsync(string slug)
+        public async Task<BlogPostResponseDto?> GetPostAsync(
+            string slug,
+            bool includeDrafts)
         {
-            var post = await _dbContext.BlogPosts
-                .AsNoTracking()
+            var post = await BuildReadablePostsQuery(includeDrafts)
                 .Select(post => new BlogPostResponseDto
                 {
                     Id = post.Id,
@@ -120,6 +140,8 @@ namespace laoyu_blog_backend.Services
                             Slug = category.Slug
                         })
                         .ToList(),
+                    Status = post.Status.ToString(),
+                    PublishedAtUtc = post.PublishedAtUtc,
                     CreatedAtUtc = post.CreatedAtUtc
                 })
                 .FirstOrDefaultAsync(post => post.Slug == slug);
@@ -159,6 +181,8 @@ namespace laoyu_blog_backend.Services
                         Slug = category.Slug
                     })
                     .ToList(),
+                Status = blogPost.Status.ToString(),
+                PublishedAtUtc = blogPost.PublishedAtUtc,
                 CreatedAtUtc = blogPost.CreatedAtUtc
             };
         }
@@ -204,9 +228,93 @@ namespace laoyu_blog_backend.Services
                         Slug = category.Slug
                     })
                     .ToList(),
+                Status = post.Status.ToString(),
+                PublishedAtUtc = post.PublishedAtUtc,
                 CreatedAtUtc = post.CreatedAtUtc
             };
 
+        }
+
+        public async Task<BlogPostResponseDto?> PublishPostAsync(int id)
+        {
+            var post = await _dbContext.BlogPosts
+                .Include(post => post.Categories)
+                .FirstOrDefaultAsync(post => post.Id == id);
+
+            if (post is null)
+            {
+                return null;
+            }
+
+            if (post.Status != BlogPostStatus.Published
+                || post.PublishedAtUtc is null)
+            {
+                post.Status = BlogPostStatus.Published;
+                post.PublishedAtUtc ??= DateTime.UtcNow;
+
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return new BlogPostResponseDto
+            {
+                Id = post.Id,
+                Slug = post.Slug,
+                Title = post.Title,
+                Content = post.Content,
+                Categories = post.Categories
+                    .OrderBy(category => category.Name)
+                    .Select(category => new CategoryResponseDto
+                    {
+                        Id = category.Id,
+                        Name = category.Name,
+                        Slug = category.Slug
+                    })
+                    .ToList(),
+                Status = post.Status.ToString(),
+                PublishedAtUtc = post.PublishedAtUtc,
+                CreatedAtUtc = post.CreatedAtUtc
+            };
+        }
+
+        public async Task<BlogPostResponseDto?> UnpublishPostAsync(int id)
+        {
+            var post = await _dbContext.BlogPosts
+                .Include(post => post.Categories)
+                .FirstOrDefaultAsync(post => post.Id == id);
+
+            if (post is null)
+            {
+                return null;
+            }
+
+            if (post.Status != BlogPostStatus.Draft
+                || post.PublishedAtUtc is not null)
+            {
+                post.Status = BlogPostStatus.Draft;
+                post.PublishedAtUtc = null;
+
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return new BlogPostResponseDto
+            {
+                Id = post.Id,
+                Slug = post.Slug,
+                Title = post.Title,
+                Content = post.Content,
+                Categories = post.Categories
+                    .OrderBy(category => category.Name)
+                    .Select(category => new CategoryResponseDto
+                    {
+                        Id = category.Id,
+                        Name = category.Name,
+                        Slug = category.Slug
+                    })
+                    .ToList(),
+                Status = post.Status.ToString(),
+                PublishedAtUtc = post.PublishedAtUtc,
+                CreatedAtUtc = post.CreatedAtUtc
+            };
         }
 
         public async Task<bool> DeletePostAsync(int id)
@@ -223,6 +331,7 @@ namespace laoyu_blog_backend.Services
             return true;
 
         }
-
     }
+
+
 }

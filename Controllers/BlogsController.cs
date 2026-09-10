@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using laoyu_blog_backend.Models;
 using laoyu_blog_backend.Dtos;
 using laoyu_blog_backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -21,10 +20,13 @@ namespace laoyu_blog_backend.Controllers
         [ProducesResponseType(typeof(PagedResultDto<BlogPostResponseDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<PagedResultDto<BlogPostResponseDto>>> GetPosts([FromQuery] PaginationQueryDto pagination)
         {
+            var includeDrafts = User.IsInRole("Admin");
+
             var result = await _blogPostService.GetPostsAsync(
                 pagination.Page,
                 pagination.PageSize,
-                pagination.CategorySlug);
+                pagination.CategorySlug,
+                includeDrafts);
 
             return Ok(result);
         }
@@ -34,7 +36,11 @@ namespace laoyu_blog_backend.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<BlogPostResponseDto>> GetPost(int id)
         {
-            var post = await _blogPostService.GetPostAsync(id);
+            var includeDrafts = User.IsInRole("Admin");
+
+            var post = await _blogPostService.GetPostAsync(
+                id,
+                includeDrafts);
 
             if (post is null)
             {
@@ -49,7 +55,11 @@ namespace laoyu_blog_backend.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<BlogPostResponseDto>> GetPostBySlug(string slug)
         {
-            var post = await _blogPostService.GetPostAsync(slug);
+            var includeDrafts = User.IsInRole("Admin");
+
+            var post = await _blogPostService.GetPostAsync(
+                slug,
+                includeDrafts);
 
 
             if (post is null)
@@ -87,6 +97,38 @@ namespace laoyu_blog_backend.Controllers
             }
 
             return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{id:int}/publish")]
+        [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<BlogPostResponseDto>> PublishPost(int id)
+        {
+            var publishedPost = await _blogPostService.PublishPostAsync(id);
+
+            if (publishedPost is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(publishedPost);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{id:int}/unpublish")]
+        [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<BlogPostResponseDto>> UnpublishPost(int id)
+        {
+            var unpublishedPost = await _blogPostService.UnpublishPostAsync(id);
+
+            if (unpublishedPost is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(unpublishedPost);
         }
 
         [Authorize(Roles = "Admin")]

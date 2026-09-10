@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { computed } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
 defineOptions({ name: 'AppHeader' })
 
+const route = useRoute()
 const { isAuthenticated, logout } = useAuth()
+
+const showLoginOption = computed(() => Object.prototype.hasOwnProperty.call(route.query, 'login'))
 </script>
 
 <template>
@@ -22,7 +26,7 @@ const { isAuthenticated, logout } = useAuth()
           <a-button type="link" class="p-0!" @click="logout"> Logout </a-button>
         </template>
 
-        <RouterLink v-else to="/login"> Login </RouterLink>
+        <RouterLink v-else-if="showLoginOption" to="/login"> Login </RouterLink>
       </nav>
     </div>
   </header>

@@ -394,3 +394,4 @@ UseAuthorization → 执行角色权限判断
 ## 主线导航
 
 - 上一步：[登录并签发 JWT Access Token](./15a-issue-jwt-access-token.md)
+- 下一步：[为文章加入草稿、发布与取消发布](./16-add-draft-publish-workflow.md)

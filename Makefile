@@ -3,7 +3,14 @@
 ENV_FILE ?= .env.development
 COMPOSE = docker compose --env-file $(ENV_FILE)
 
-.PHONY: help build up dev down logs migration db-update db-rollback
+PROD_ENV_FILE ?= .env.production
+PROD_PROJECT ?= laoyu-blog-prod
+PROD_COMPOSE = docker compose \
+	-p $(PROD_PROJECT) \
+	-f compose.production.yaml \
+	--env-file $(PROD_ENV_FILE)
+
+.PHONY: help build up dev down logs prod-up prod-down prod-logs prod-ps migration db-update db-rollback
 
 help:
 	@echo "Available commands:"
@@ -12,6 +19,10 @@ help:
 	@echo "  make dev"
 	@echo "  make down"
 	@echo "  make logs"
+	@echo "  make prod-up"
+	@echo "  make prod-down"
+	@echo "  make prod-logs"
+	@echo "  make prod-ps"
 	@echo "  make migration NAME=InitialCreate"
 	@echo "  make db-update"
 	@echo "  make db-rollback TARGET=0"
@@ -30,6 +41,18 @@ down:
 
 logs:
 	$(COMPOSE) logs --follow api
+
+prod-up:
+	$(PROD_COMPOSE) up --detach --build
+
+prod-down:
+	$(PROD_COMPOSE) down
+
+prod-logs:
+	$(PROD_COMPOSE) logs --follow
+
+prod-ps:
+	$(PROD_COMPOSE) ps
 
 migration:
 	@test -n "$(NAME)" || \

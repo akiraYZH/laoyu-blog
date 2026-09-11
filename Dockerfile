@@ -37,6 +37,9 @@ RUN apt-get update \
 
 WORKDIR /app
 
+RUN mkdir -p /app/wwwroot/uploads \
+    && chown -R $APP_UID:$APP_UID /app/wwwroot
+
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_HTTP_PORTS=8080

@@ -1,6 +1,6 @@
 # 从零构建 ASP.NET Core 博客 API
 
-这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose、Service Layer、统一异常处理、Identity 管理员和 JWT 角色授权的博客 API。
+这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose、Service Layer、统一异常处理、Identity 管理员、JWT 角色授权、草稿发布、自动化测试、健康检查和结构化日志的博客 API。
 
 文章统一使用：
 
@@ -54,6 +54,10 @@ API Base Route: /api/blogs
 | 25 | [加入 Identity 管理员](./15-add-aspnet-core-identity-admin.md) | ApplicationUser、Identity Tables、AdminSeeder | 管理员和 Admin 角色只初始化一次 |
 | 26 | [登录并签发 JWT](./15a-issue-jwt-access-token.md) | Login DTO、AuthController、JwtTokenService | 正确账号返回 Access Token，错误账号返回 401 |
 | 27 | [使用 JWT Bearer 保护写接口](./15b-protect-blog-write-endpoints-jwt.md) | Bearer Validation、Authentication Middleware、Role Authorization | 游客可读，只有 Admin 可以写入和上传 |
+| 28 | [为文章加入草稿、发布与取消发布](./16-add-draft-publish-workflow.md) | Publish Status、Published Time、Public Query Filter | 草稿对游客不可见，发布后可见，取消发布后再次隐藏 |
+| 29 | [使用 xUnit 测试博客 API 工作流](./17-test-blog-api-workflows.md) | Unit Tests、WebApplicationFactory、Isolated Test Database | 授权与发布流程可重复验证 |
+| 30 | [为 API 和数据库加入健康检查](./18-add-api-database-health-check.md) | `/health`、DbContext Check、Compose Healthcheck | API 与数据库就绪状态可被 Docker 判断 |
+| 31 | [使用 Request Scope 建立结构化日志](./19-structured-logging-request-scope.md) | TraceId、UserId、Action Logs | 一次请求的日志可以被关联和检索 |
 
 ## 概念补充
 
@@ -63,6 +67,7 @@ API Base Route: /api/blogs
 - [读懂 Program.cs](./00b-understand-aspnet-core-program-cs.md)
 - [Controller Attribute Routing](./00c-aspnet-core-controller-routing.md)
 - [本地启动与排错](./00d-run-and-test-aspnet-core-api.md)
+- [读懂 Dockerfile 与 Docker Compose 的分工](./03b-understand-dockerfile-and-compose.md)
 - [OnModelCreating Hook](./04a-ef-core-onmodelcreating-hook.md)
 - [System.Text.Json Attribute](./08a-system-text-json-dto-attributes.md)
 - [Body、Route、Query 与 Header Binding](./08b-aspnet-core-model-binding-sources.md)
@@ -133,6 +138,17 @@ GET → 游客可访问
 POST、PUT、DELETE、图片上传 → 只有 Admin 可访问
 ```
 
+### 发布、测试与可观测性完成时
+
+```text
+BlogPost.Status + PublishedAtUtc → 区分 Draft 与 Published
+Publish / Unpublish → 显式改变文章发布状态
+xUnit + WebApplicationFactory → 验证授权和发布工作流
+GET /health → 同时检查 API 与 AppDbContext
+Request Scope → 为同一次请求附加 TraceId 与 UserId
+Structured Logs → 记录创建、更新、发布和删除动作
+```
+
 ## 最终目录结构
 
 ```text
@@ -174,6 +190,15 @@ BlogApi/
 │   └── CategoryService.cs
 ├── Exceptions/
 │   └── SlugConflictExceptionHandler.cs
+├── Middleware/
+│   └── RequestLogContextMiddleware.cs
+├── tests/
+│   └── LaoyuBlog.Api.Tests/
+│       ├── BlogApiFactory.cs
+│       ├── BlogAuthorizationTests.cs
+│       ├── BlogPostDomainTests.cs
+│       ├── BlogPostDtoValidationTests.cs
+│       └── HealthCheckTests.cs
 ├── scripts/
 │   ├── add-migration.sh
 │   └── update-database.sh

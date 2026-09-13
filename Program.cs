@@ -22,7 +22,10 @@ var connectionString =
     ?? throw new InvalidOperationException(
         "Connection string 'DefaultConnection' was not found.");
 
-if (builder.Environment.IsProduction())
+var storageProvider = builder.Configuration["Storage:Provider"];
+var useS3Storage = string.Equals(storageProvider, "S3", StringComparison.OrdinalIgnoreCase);
+
+if (useS3Storage)
 {
     var s3StorageOptions = builder.Configuration
         .GetSection(S3StorageOptions.SectionName)
@@ -126,7 +129,7 @@ builder.Services.AddExceptionHandler<SlugConflictExceptionHandler>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<BlogPostService>();
 builder.Services.AddScoped<CategoryService>();
-if (builder.Environment.IsProduction())
+if (useS3Storage)
 {
     builder.Services.AddScoped<
         IImageStorageService,

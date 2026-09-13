@@ -10,7 +10,12 @@ PROD_COMPOSE = docker compose \
 	-f compose.production.yaml \
 	--env-file $(PROD_ENV_FILE)
 
-.PHONY: help build up dev down logs prod-up prod-down prod-logs prod-ps migration db-update db-rollback
+VPS_COMPOSE = docker compose \
+	-p $(PROD_PROJECT) \
+	-f compose.vps.yaml \
+	--env-file $(PROD_ENV_FILE)
+
+.PHONY: help build up dev down logs prod-up prod-down prod-logs prod-ps vps-up vps-down vps-logs vps-ps migration db-update db-rollback
 
 help:
 	@echo "Available commands:"
@@ -23,6 +28,10 @@ help:
 	@echo "  make prod-down"
 	@echo "  make prod-logs"
 	@echo "  make prod-ps"
+	@echo "  make vps-up"
+	@echo "  make vps-down"
+	@echo "  make vps-logs"
+	@echo "  make vps-ps"
 	@echo "  make migration NAME=InitialCreate"
 	@echo "  make db-update"
 	@echo "  make db-rollback TARGET=0"
@@ -53,6 +62,18 @@ prod-logs:
 
 prod-ps:
 	$(PROD_COMPOSE) ps
+
+vps-up:
+	$(VPS_COMPOSE) up --detach --build
+
+vps-down:
+	$(VPS_COMPOSE) down
+
+vps-logs:
+	$(VPS_COMPOSE) logs --follow
+
+vps-ps:
+	$(VPS_COMPOSE) ps
 
 migration:
 	@test -n "$(NAME)" || \

@@ -5,7 +5,7 @@ import { useBlogPostStore } from '@/stores/blogPost'
 import type { BlogPost, PagedResult } from '@/types'
 
 vi.mock('@/api/apiFetch', () => ({
-  apiFetch: vi.fn(),
+  apiFetch: vi.fn<typeof apiFetch>(),
 }))
 
 const mockedApiFetch = vi.mocked(apiFetch)

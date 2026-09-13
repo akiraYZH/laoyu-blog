@@ -89,4 +89,16 @@ public sealed class LocalImageStorageService : IImageStorageService
 
         return ImageUploadResult.Success(imageUrl);
     }
+
+    public Task<string?> CreateReadUrlAsync(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName)
+            || fileName != Path.GetFileName(fileName))
+        {
+            return Task.FromResult<string?>(null);
+        }
+
+        return Task.FromResult<string?>(
+            $"/{UploadsFolder}/{fileName}");
+    }
 }

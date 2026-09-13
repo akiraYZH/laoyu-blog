@@ -8,3 +8,5 @@ obj/
 !.env.example
 wwwroot/uploads/*
 !wwwroot/uploads/.gitkeep
+
+*.pem

@@ -18,6 +18,23 @@ public class UploadsController : ControllerBase
         _imageStorageService = imageStorageService;
     }
 
+    [AllowAnonymous]
+    [HttpGet("images/{fileName}")]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetImage(string fileName)
+    {
+        var imageUrl =
+            await _imageStorageService.CreateReadUrlAsync(fileName);
+
+        if (imageUrl is null)
+        {
+            return NotFound();
+        }
+
+        return Redirect(imageUrl);
+    }
+
     [HttpPost("images")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(

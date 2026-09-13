@@ -29,6 +29,9 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__Key: ${JWT_KEY}
       Jwt__ExpirationMinutes: ${JWT_EXPIRATION_MINUTES}
+      S3Storage__BucketName: ${S3_BUCKET_NAME}
+      S3Storage__Region: ${S3_REGION}
+      S3Storage__KeyPrefix: ${S3_KEY_PREFIX}
     depends_on:
       postgres:
         condition: service_healthy

@@ -12,6 +12,8 @@ using laoyu_blog_backend.Services;
 using laoyu_blog_backend.Exceptions;
 using laoyu_blog_backend.Data.Seeding;
 using laoyu_blog_backend.Middleware;
+using Amazon;
+using Amazon.S3;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,30 @@ var connectionString =
     builder.Configuration.GetConnectionString("LaoyuBlog")
     ?? throw new InvalidOperationException(
         "Connection string 'DefaultConnection' was not found.");
+
+if (builder.Environment.IsProduction())
+{
+    var s3StorageOptions = builder.Configuration
+        .GetSection(S3StorageOptions.SectionName)
+        .Get<S3StorageOptions>()
+        ?? throw new InvalidOperationException(
+            "S3 storage configuration was not found.");
+
+    if (string.IsNullOrWhiteSpace(s3StorageOptions.BucketName)
+        || string.IsNullOrWhiteSpace(s3StorageOptions.Region)
+        || string.IsNullOrWhiteSpace(s3StorageOptions.KeyPrefix))
+    {
+        throw new InvalidOperationException(
+            "S3 storage configuration is invalid.");
+    }
+
+    builder.Services.AddSingleton(s3StorageOptions);
+
+    builder.Services.AddSingleton<IAmazonS3>(_ =>
+        new AmazonS3Client(
+            RegionEndpoint.GetBySystemName(
+                s3StorageOptions.Region)));
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -100,7 +126,18 @@ builder.Services.AddExceptionHandler<SlugConflictExceptionHandler>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<BlogPostService>();
 builder.Services.AddScoped<CategoryService>();
-builder.Services.AddScoped<IImageStorageService, LocalImageStorageService>();
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddScoped<
+        IImageStorageService,
+        S3ImageStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<
+        IImageStorageService,
+        LocalImageStorageService>();
+}
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

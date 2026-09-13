@@ -7,4 +7,6 @@ public interface IImageStorageService
     Task<ImageUploadResult> SaveAsync(
         IFormFile file,
         CancellationToken cancellationToken);
+
+    Task<string?> CreateReadUrlAsync(string fileName);
 }

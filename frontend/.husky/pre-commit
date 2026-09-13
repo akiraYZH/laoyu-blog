@@ -1,0 +1,2 @@
+npm --prefix frontend run lint:staged
+dotnet test tests/LaoyuBlog.Api.Tests/LaoyuBlog.Api.Tests.csproj

@@ -1,5 +1,7 @@
 FROM node:24-alpine AS development
 
+ENV HUSKY=0
+
 WORKDIR /app
 
 COPY package.json package-lock.json ./

@@ -71,6 +71,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        env:
+          HUSKY: 0
         run: npm ci
 
       - name: Run Oxlint

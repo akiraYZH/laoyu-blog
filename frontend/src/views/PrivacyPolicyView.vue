@@ -5,7 +5,7 @@
     <p class="mt-3 text-sm text-slate-500">Last updated: September 9, 2026</p>
 
     <p class="mt-8 leading-7">
-      This policy explains how Laoyu Blog handles information when you browse the site, use
+      This policy explains how YZH Code handles information when you browse the site, use
       administrator features, or contact the project through a linked third-party service.
     </p>
 

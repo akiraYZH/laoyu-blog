@@ -5,7 +5,7 @@
     <p class="mt-3 text-sm text-slate-500">Last updated: September 9, 2026</p>
 
     <p class="mt-8 leading-7">
-      By using Laoyu Blog, you agree to use the site lawfully and responsibly. If you do not agree
+      By using YZH Code, you agree to use the site lawfully and responsibly. If you do not agree
       with these terms, please stop using the site.
     </p>
 
@@ -50,7 +50,7 @@
           attempt unauthorized access, disruption, scraping that harms availability, or abuse;
         </li>
         <li>upload or submit malware, secrets, illegal material, or deceptive content;</li>
-        <li>misrepresent your relationship with Laoyu Blog or its contributors.</li>
+        <li>misrepresent your relationship with YZH Code or its contributors.</li>
       </ul>
     </section>
 
@@ -67,7 +67,7 @@
         Limitation of responsibility
       </h2>
       <p class="mt-4 leading-7">
-        To the extent permitted by applicable law, Laoyu Blog is not responsible for losses arising
+        To the extent permitted by applicable law, YZH Code is not responsible for losses arising
         from reliance on site content, use of example code, service interruption, or third-party
         services.
       </p>

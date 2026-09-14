@@ -4,13 +4,13 @@ const repositoryUrl = 'https://github.com/akiraYZH/laoyu-blog-backend'
 
 <template>
   <article class="mx-auto max-w-3xl">
-    <p class="text-sm font-semibold uppercase tracking-widest text-emerald-700">About Laoyu Blog</p>
+    <p class="text-sm font-semibold uppercase tracking-widest text-emerald-700">About YZH Code</p>
     <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">
       Practical engineering, documented honestly
     </h1>
 
     <p class="mt-6 text-lg leading-8 text-slate-700">
-      Laoyu Blog is a hands-on learning project about designing and shipping a modern full-stack
+      YZH Code is a hands-on learning project about designing and shipping a modern full-stack
       application. Instead of presenting isolated code snippets, the articles follow real features
       from the first design decision through implementation, debugging, testing, and deployment.
     </p>

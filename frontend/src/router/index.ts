@@ -13,7 +13,7 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
       meta: {
-        title: 'Laoyu Blog | Practical Full-Stack Engineering',
+        title: 'YZH Code | Practical Full-Stack Engineering',
         description: defaultDescription,
       },
     },
@@ -23,7 +23,7 @@ const router = createRouter({
       component: () => import('../views/CategoryPostsView.vue'),
       props: true,
       meta: {
-        title: 'Articles by Category | Laoyu Blog',
+        title: 'Articles by Category | YZH Code',
         description: 'Browse practical full-stack engineering tutorials by category.',
       },
     },
@@ -32,8 +32,8 @@ const router = createRouter({
       name: 'about',
       component: () => import('../views/AboutView.vue'),
       meta: {
-        title: 'About | Laoyu Blog',
-        description: 'Learn how Laoyu Blog documents full-stack engineering decisions and results.',
+        title: 'About | YZH Code',
+        description: 'Learn how YZH Code documents full-stack engineering decisions and results.',
       },
     },
     {
@@ -41,8 +41,8 @@ const router = createRouter({
       name: 'contact',
       component: () => import('../views/ContactView.vue'),
       meta: {
-        title: 'Contact | Laoyu Blog',
-        description: 'Report a problem, suggest an improvement, or contact the Laoyu Blog project.',
+        title: 'Contact | YZH Code',
+        description: 'Report a problem, suggest an improvement, or contact the YZH Code project.',
       },
     },
     {
@@ -50,8 +50,8 @@ const router = createRouter({
       name: 'privacy',
       component: () => import('../views/PrivacyPolicyView.vue'),
       meta: {
-        title: 'Privacy Policy | Laoyu Blog',
-        description: 'How Laoyu Blog handles site, advertising, and contact information.',
+        title: 'Privacy Policy | YZH Code',
+        description: 'How YZH Code handles site, advertising, and contact information.',
       },
     },
     {
@@ -59,8 +59,8 @@ const router = createRouter({
       name: 'terms',
       component: () => import('../views/TermsOfUseView.vue'),
       meta: {
-        title: 'Terms of Use | Laoyu Blog',
-        description: 'The terms governing use of Laoyu Blog articles, examples, and site features.',
+        title: 'Terms of Use | YZH Code',
+        description: 'The terms governing use of YZH Code articles, examples, and site features.',
       },
     },
     {
@@ -68,8 +68,8 @@ const router = createRouter({
       name: 'login',
       component: () => import('../views/LoginView.vue'),
       meta: {
-        title: 'Admin Login | Laoyu Blog',
-        description: 'Administrator access for Laoyu Blog.',
+        title: 'Admin Login | YZH Code',
+        description: 'Administrator access for YZH Code.',
         noindex: true,
       },
     },
@@ -78,8 +78,8 @@ const router = createRouter({
       name: 'createBlog',
       component: () => import('../views/CreateBlogView.vue'),
       meta: {
-        title: 'Create Post | Laoyu Blog',
-        description: 'Create a Laoyu Blog article.',
+        title: 'Create Post | YZH Code',
+        description: 'Create a YZH Code article.',
         requiresAuth: true,
         noindex: true,
       },
@@ -89,8 +89,8 @@ const router = createRouter({
       name: 'blogDetail',
       component: () => import('../views/BlogPostDetailView.vue'),
       meta: {
-        title: 'Article | Laoyu Blog',
-        description: 'Read a practical full-stack engineering article on Laoyu Blog.',
+        title: 'Article | YZH Code',
+        description: 'Read a practical full-stack engineering article on YZH Code.',
       },
     },
     {
@@ -98,8 +98,8 @@ const router = createRouter({
       name: 'updateBlog',
       component: () => import('../views/UpdateBlogView.vue'),
       meta: {
-        title: 'Edit Post | Laoyu Blog',
-        description: 'Edit a Laoyu Blog article.',
+        title: 'Edit Post | YZH Code',
+        description: 'Edit a YZH Code article.',
         requiresAuth: true,
         noindex: true,
       },
@@ -109,7 +109,7 @@ const router = createRouter({
       name: 'manageCategories',
       component: () => import('../views/ManageCategoriesView.vue'),
       meta: {
-        title: 'Manage Categories | Laoyu Blog',
+        title: 'Manage Categories | YZH Code',
         description: 'Manage blog categories.',
         requiresAuth: true,
         noindex: true,
@@ -120,8 +120,8 @@ const router = createRouter({
       name: 'notFound',
       component: () => import('../views/NotFoundView.vue'),
       meta: {
-        title: 'Page Not Found | Laoyu Blog',
-        description: 'The requested Laoyu Blog page could not be found.',
+        title: 'Page Not Found | YZH Code',
+        description: 'The requested YZH Code page could not be found.',
         noindex: true,
       },
     },
@@ -155,7 +155,7 @@ router.afterEach((to, _from, failure) => {
   document.title =
     typeof to.meta.title === 'string'
       ? to.meta.title
-      : 'Laoyu Blog | Practical Full-Stack Engineering'
+      : 'YZH Code | Practical Full-Stack Engineering'
 
   const description = document.querySelector<HTMLMetaElement>('meta[name="description"]')
 

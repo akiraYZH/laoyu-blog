@@ -11,7 +11,7 @@ const repositoryUrl = 'https://github.com/akiraYZH/laoyu-blog-backend'
   <footer class="border-t border-slate-200 bg-slate-950 text-slate-300">
     <div class="mx-auto grid max-w-6xl gap-8 px-6 py-10 md:grid-cols-[1.3fr_1fr]">
       <div>
-        <RouterLink to="/" class="text-lg font-bold text-white">Laoyu Blog</RouterLink>
+        <RouterLink to="/" class="text-lg font-bold text-white">YZH Code</RouterLink>
         <p class="mt-3 max-w-xl text-sm leading-6 text-slate-400">
           Practical notes about building a full-stack blog with ASP.NET Core, PostgreSQL, Vue,
           testing, and container-based development.
@@ -30,7 +30,7 @@ const repositoryUrl = 'https://github.com/akiraYZH/laoyu-blog-backend'
     </div>
 
     <div class="border-t border-slate-800 px-6 py-4 text-center text-xs text-slate-500">
-      © {{ currentYear }} Laoyu Blog. Built as a practical full-stack engineering project.
+      © {{ currentYear }} YZH Code. Built as a practical full-stack engineering project.
     </div>
   </footer>
 </template>

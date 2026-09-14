@@ -28,6 +28,8 @@ public class BlogPostDto : IValidatableObject
 
     public List<string> Tags { get; set; } = [];
 
+    public int Order { get; set; } = 0;
+
     [Required(ErrorMessage = "Content is required.")]
     public string Content { get; set; } = string.Empty;
 

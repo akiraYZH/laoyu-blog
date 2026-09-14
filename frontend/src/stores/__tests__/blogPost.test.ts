@@ -24,8 +24,9 @@ const publishedPost: BlogPost = {
   ],
   tags: [],
   status: 'Published',
-  publishedAtUtc: '2026-09-11T12:00:00Z',
-  createdAtUtc: '2026-09-10T12:00:00Z',
+  publishedAtUtc: '2023-01-01T12:00:00Z',
+  createdAtUtc: '2023-01-01T12:00:00Z',
+  order: 0,
 }
 
 describe('blog post store', () => {

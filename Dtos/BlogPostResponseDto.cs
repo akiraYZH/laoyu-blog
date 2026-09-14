@@ -12,4 +12,5 @@ public class BlogPostResponseDto
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? PublishedAtUtc { get; set; }
     public List<string> Tags { get; set; } = [];
+    public int Order { get; set; }
 }

@@ -20,6 +20,8 @@ public class BlogPost
 
     public List<string> Tags { get; set; } = [];
 
+    public int Order { get; set; } = 0;
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public bool Publish()

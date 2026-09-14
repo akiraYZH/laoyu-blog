@@ -29,6 +29,7 @@ const slug = ref('')
 const content = ref('')
 const categoryNames = ref<string[]>([])
 const tags = ref<string[]>([])
+const order = ref<number>(0)
 const { uploadImage } = useUploadImage()
 const { categories, getCategories } = useBlogPosts()
 
@@ -55,6 +56,7 @@ watch(
     content.value = values.content
     categoryNames.value = [...values.categoryNames]
     tags.value = values.tags ? [...values.tags] : []
+    order.value = values.order ?? 0
   },
   { immediate: true },
 )
@@ -72,6 +74,7 @@ const submitForm = () => {
     content: content.value,
     categoryNames: [...categoryNames.value],
     tags: [...tags.value],
+    order: order.value,
   })
 }
 </script>
@@ -106,6 +109,15 @@ const submitForm = () => {
         mode="tags"
         class="w-full"
         placeholder="Create tags (e.g. DP, Graph, etc.)"
+      />
+    </div>
+
+    <div class="mb-5">
+      <a-typography-title :level="3">Order (Optional)</a-typography-title>
+      <a-input-number
+        v-model:value="order"
+        class="w-full"
+        placeholder="Default is 0. Lower numbers appear first."
       />
     </div>
 

@@ -1,6 +1,6 @@
 # 从零构建 ASP.NET Core 博客 API
 
-这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose、Service Layer、统一异常处理、Identity 管理员、JWT 角色授权、草稿发布、自动化测试、健康检查和结构化日志的博客 API。
+这套笔记既是技术文章集合，也是一条可执行的项目主线。按“必做主线”顺序操作，可以从空目录逐步构建一个具备 PostgreSQL、EF Core Migration、CRUD、Validation、Slug、分页、Docker Compose、Service Layer、统一异常处理、Identity 管理员、JWT 角色授权、草稿发布、自动化测试、健康检查、结构化日志、可切换图片存储、CI、手动部署和集中日志的全栈博客。
 
 文章统一使用：
 
@@ -58,6 +58,14 @@ API Base Route: /api/blogs
 | 29 | [使用 xUnit 测试博客 API 工作流](./17-test-blog-api-workflows.md) | Unit Tests、WebApplicationFactory、Isolated Test Database | 授权与发布流程可重复验证 |
 | 30 | [为 API 和数据库加入健康检查](./18-add-api-database-health-check.md) | `/health`、DbContext Check、Compose Healthcheck | API 与数据库就绪状态可被 Docker 判断 |
 | 31 | [使用 Request Scope 建立结构化日志](./19-structured-logging-request-scope.md) | TraceId、UserId、Action Logs | 一次请求的日志可以被关联和检索 |
+| 32 | [运行生产式 Docker Compose 栈](./20-production-compose-nginx.md) | Vue Build、Nginx、Production Compose | 只公开前端入口，三个服务健康运行 |
+| 33 | [切换本地与 S3 图片存储](./21-switch-local-s3-image-storage.md) | Storage Provider、S3 Service、Presigned Read URL | Local 与 S3 两种模式分别上传并读取成功 |
+| 34 | [使用 GitHub Actions 验证前后端](./22-github-actions-ci.md) | Backend/Frontend CI Jobs | Push 和 PR 显示两组独立检查 |
+| 35 | [使用 Husky 检查前后端](./23-husky-pre-commit-fullstack.md) | Pre-commit、lint-staged、xUnit | 检查失败时 Commit 被阻止 |
+| 36 | [使用 OIDC 和 SSM 手动部署 EC2](./24-github-oidc-ssm-ec2-deploy.md) | Deploy Role、OIDC、Run Command | 手动 Workflow 返回 SSM Success |
+| 37 | [发送容器日志到 CloudWatch](./25-docker-cloudwatch-logs.md) | awslogs、Log Groups、EC2 Role | 三个服务的 stdout 可集中检索 |
+| 38 | [保留 AWS 并部署私人 VPS](./26-vps-deployment-profile.md) | VPS Compose、Local Storage、SSH Workflow | VPS 健康运行且 Merge 不自动部署 |
+| 39 | [使用 PostgreSQL 数组保存标签](./27-postgresql-array-tags.md) | `text[]` Migration、Tag Filter、Tag Folder | 标签与未标签筛选结果正确 |
 
 ## 概念补充
 
@@ -149,6 +157,17 @@ Request Scope → 为同一次请求附加 TraceId 与 UserId
 Structured Logs → 记录创建、更新、发布和删除动作
 ```
 
+### 生产化与双部署配置完成时
+
+```text
+Production Compose → Nginx + ASP.NET Core + PostgreSQL
+Storage Provider   → Local Volume 或 Amazon S3
+GitHub Actions CI  → 独立验证 Backend 与 Frontend
+Manual Deploy      → AWS OIDC + SSM 或 VPS SSH
+CloudWatch Logs    → 收集 AWS Profile 的 Container stdout/stderr
+PostgreSQL text[]  → 保存并筛选轻量文章 Tags
+```
+
 ## 最终目录结构
 
 ```text
@@ -177,7 +196,8 @@ BlogApi/
 │   ├── BlogPost.cs
 │   └── Category.cs
 ├── Options/
-│   └── JwtOptions.cs
+│   ├── JwtOptions.cs
+│   └── S3StorageOptions.cs
 ├── Services/
 │   ├── Auth/
 │   │   ├── JwtTokenResult.cs
@@ -185,7 +205,8 @@ BlogApi/
 │   ├── ImageStorage/
 │   │   ├── IImageStorageService.cs
 │   │   ├── ImageUploadResult.cs
-│   │   └── LocalImageStorageService.cs
+│   │   ├── LocalImageStorageService.cs
+│   │   └── S3ImageStorageService.cs
 │   ├── BlogPostService.cs
 │   └── CategoryService.cs
 ├── Exceptions/
@@ -193,7 +214,7 @@ BlogApi/
 ├── Middleware/
 │   └── RequestLogContextMiddleware.cs
 ├── tests/
-│   └── LaoyuBlog.Api.Tests/
+│   └── BlogApi.Tests/
 │       ├── BlogApiFactory.cs
 │       ├── BlogAuthorizationTests.cs
 │       ├── BlogPostDomainTests.cs
@@ -209,8 +230,14 @@ BlogApi/
 ├── Dockerfile
 ├── .dockerignore
 ├── compose.yaml
+├── compose.production.yaml
+├── compose.vps.yaml
 ├── Makefile
 ├── .env.example
+├── .github/workflows/
+│   ├── ci.yml
+│   ├── deploy.yml
+│   └── deploy-vps.yml
 ├── appsettings.json
 ├── appsettings.Development.json
 ├── BlogApi.http

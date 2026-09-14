@@ -16,6 +16,7 @@ export interface BlogPost {
   status: BlogPostStatus
   publishedAtUtc: string | null
   createdAtUtc: string
+  order: number
 }
 
 export interface BlogPostInput {
@@ -24,6 +25,7 @@ export interface BlogPostInput {
   content: string
   categoryNames: string[]
   tags: string[]
+  order?: number
 }
 
 export interface PagedResult<T> {

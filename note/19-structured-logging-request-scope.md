@@ -198,4 +198,4 @@ dotnet test
 ## 主线导航
 
 - 上一步：[为 API 和 PostgreSQL 添加 Health Check](./18-add-api-database-health-check.md)
-- 下一步：[返回系列目录](./README.md)
+- 下一步：[使用 Docker Compose、Nginx 和健康检查运行生产栈](./20-production-compose-nginx.md)

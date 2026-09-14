@@ -25,6 +25,8 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     requestedPage = 1,
     requestedPageSize = 10,
     requestedCategorySlug: string | null = selectedCategorySlug.value,
+    tag?: string,
+    untaggedOnly: boolean = false,
   ): Promise<void> {
     loading.value = true
     loadError.value = null
@@ -38,6 +40,12 @@ export const useBlogPostStore = defineStore('blogPost', () => {
 
       if (requestedCategorySlug) {
         searchParams.set('categorySlug', requestedCategorySlug)
+      }
+      if (tag) {
+        searchParams.set('tag', tag)
+      }
+      if (untaggedOnly) {
+        searchParams.set('untaggedOnly', 'true')
       }
 
       const response = await apiFetch(`/api/blogs?${searchParams.toString()}`)
@@ -77,6 +85,74 @@ export const useBlogPostStore = defineStore('blogPost', () => {
         caughtError instanceof Error ? caughtError.message : '获取分类时发生未知错误'
 
       throw caughtError
+    }
+  }
+
+  async function fetchCategoryTags(categorySlug: string): Promise<string[]> {
+    try {
+      const response = await apiFetch(`/api/categories/${encodeURIComponent(categorySlug)}/tags`)
+
+      if (!response.ok) {
+        throw new Error(`获取标签失败：HTTP ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (caughtError) {
+      loadError.value =
+        caughtError instanceof Error ? caughtError.message : '获取标签时发生未知错误'
+      throw caughtError
+    }
+  }
+
+  async function createCategory(name: string): Promise<Category> {
+    loading.value = true
+    try {
+      const response = await apiFetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      if (!response.ok) throw await createApiRequestError(response)
+      const newCategory: Category = await response.json()
+      categories.value.push(newCategory)
+      categories.value.sort((a, b) => a.name.localeCompare(b.name))
+      return newCategory
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateCategory(id: number, name: string): Promise<Category> {
+    loading.value = true
+    try {
+      const response = await apiFetch(`/api/categories/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      if (!response.ok) throw await createApiRequestError(response)
+      const updatedCategory: Category = await response.json()
+      const index = categories.value.findIndex((c) => c.id === id)
+      if (index !== -1) {
+        categories.value[index] = updatedCategory
+        categories.value.sort((a, b) => a.name.localeCompare(b.name))
+      }
+      return updatedCategory
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function deleteCategory(id: number): Promise<void> {
+    loading.value = true
+    try {
+      const response = await apiFetch(`/api/categories/${id}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw await createApiRequestError(response)
+      categories.value = categories.value.filter((c) => c.id !== id)
+    } finally {
+      loading.value = false
     }
   }
 
@@ -282,6 +358,10 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     loadError,
     fetchPosts,
     fetchCategories,
+    fetchCategoryTags,
+    createCategory,
+    updateCategory,
+    deleteCategory,
     loadPostBySlug,
     createBlogPost,
     updateBlogPost,

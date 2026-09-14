@@ -105,6 +105,17 @@ const router = createRouter({
       },
     },
     {
+      path: '/manage-categories',
+      name: 'manageCategories',
+      component: () => import('../views/ManageCategoriesView.vue'),
+      meta: {
+        title: 'Manage Categories | Laoyu Blog',
+        description: 'Manage blog categories.',
+        requiresAuth: true,
+        noindex: true,
+      },
+    },
+    {
       path: '/:pathMatch(.*)',
       name: 'notFound',
       component: () => import('../views/NotFoundView.vue'),

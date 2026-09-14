@@ -12,6 +12,7 @@ export interface BlogPost {
   title: string
   content: string
   categories: Category[]
+  tags: string[]
   status: BlogPostStatus
   publishedAtUtc: string | null
   createdAtUtc: string
@@ -22,6 +23,7 @@ export interface BlogPostInput {
   slug: string
   content: string
   categoryNames: string[]
+  tags: string[]
 }
 
 export interface PagedResult<T> {

@@ -41,6 +41,8 @@ namespace laoyu_blog_backend.Services
             int page,
             int pageSize,
             string? categorySlug,
+            string? tag,
+            bool untaggedOnly,
             bool includeDrafts)
         {
             var query = BuildReadablePostsQuery(includeDrafts);
@@ -49,6 +51,16 @@ namespace laoyu_blog_backend.Services
             {
                 query = query.Where(post =>
                     post.Categories.Any(category => category.Slug == categorySlug));
+            }
+
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                query = query.Where(post => post.Tags.Contains(tag));
+            }
+
+            if (untaggedOnly)
+            {
+                query = query.Where(post => post.Tags.Count == 0 || post.Tags == null);
             }
 
             var orderedQuery = query
@@ -77,7 +89,8 @@ namespace laoyu_blog_backend.Services
                         .ToList(),
                     Status = post.Status.ToString(),
                     PublishedAtUtc = post.PublishedAtUtc,
-                    CreatedAtUtc = post.CreatedAtUtc
+                    CreatedAtUtc = post.CreatedAtUtc,
+                    Tags = post.Tags
                 })
                 .ToListAsync();
 
@@ -117,7 +130,8 @@ namespace laoyu_blog_backend.Services
                         .ToList(),
                     Status = post.Status.ToString(),
                     PublishedAtUtc = post.PublishedAtUtc,
-                    CreatedAtUtc = post.CreatedAtUtc
+                    CreatedAtUtc = post.CreatedAtUtc,
+                    Tags = post.Tags
                 })
                 .FirstOrDefaultAsync(post => post.Id == id);
 
@@ -147,7 +161,8 @@ namespace laoyu_blog_backend.Services
                         .ToList(),
                     Status = post.Status.ToString(),
                     PublishedAtUtc = post.PublishedAtUtc,
-                    CreatedAtUtc = post.CreatedAtUtc
+                    CreatedAtUtc = post.CreatedAtUtc,
+                    Tags = post.Tags
                 })
                 .FirstOrDefaultAsync(post => post.Slug == slug);
 
@@ -165,7 +180,8 @@ namespace laoyu_blog_backend.Services
                 Title = dto.Title,
                 Slug = dto.Slug,
                 Content = dto.Content,
-                Categories = categories
+                Categories = categories,
+                Tags = dto.Tags ?? []
             };
 
             await _dbContext.BlogPosts.AddAsync(blogPost);
@@ -192,7 +208,8 @@ namespace laoyu_blog_backend.Services
                     .ToList(),
                 Status = blogPost.Status.ToString(),
                 PublishedAtUtc = blogPost.PublishedAtUtc,
-                CreatedAtUtc = blogPost.CreatedAtUtc
+                CreatedAtUtc = blogPost.CreatedAtUtc,
+                Tags = blogPost.Tags
             };
         }
 
@@ -217,6 +234,7 @@ namespace laoyu_blog_backend.Services
             post.Title = dto.Title;
             post.Slug = dto.Slug;
             post.Content = dto.Content;
+            post.Tags = dto.Tags ?? [];
             post.Categories.Clear();
 
             foreach (var category in categories)
@@ -247,7 +265,8 @@ namespace laoyu_blog_backend.Services
                     .ToList(),
                 Status = post.Status.ToString(),
                 PublishedAtUtc = post.PublishedAtUtc,
-                CreatedAtUtc = post.CreatedAtUtc
+                CreatedAtUtc = post.CreatedAtUtc,
+                Tags = post.Tags
             };
 
         }
@@ -293,7 +312,8 @@ namespace laoyu_blog_backend.Services
                     .ToList(),
                 Status = post.Status.ToString(),
                 PublishedAtUtc = post.PublishedAtUtc,
-                CreatedAtUtc = post.CreatedAtUtc
+                CreatedAtUtc = post.CreatedAtUtc,
+                Tags = post.Tags
             };
         }
 
@@ -338,7 +358,8 @@ namespace laoyu_blog_backend.Services
                     .ToList(),
                 Status = post.Status.ToString(),
                 PublishedAtUtc = post.PublishedAtUtc,
-                CreatedAtUtc = post.CreatedAtUtc
+                CreatedAtUtc = post.CreatedAtUtc,
+                Tags = post.Tags
             };
         }
 
@@ -366,6 +387,20 @@ namespace laoyu_blog_backend.Services
 
             return true;
 
+        }
+
+        public async Task<List<string>> GetCategoryTagsAsync(string categorySlug, bool includeDrafts)
+        {
+            var query = BuildReadablePostsQuery(includeDrafts);
+            
+            var tags = await query
+                .Where(post => post.Categories.Any(c => c.Slug == categorySlug))
+                .SelectMany(post => post.Tags)
+                .Distinct()
+                .OrderBy(tag => tag)
+                .ToListAsync();
+                
+            return tags;
         }
     }
 

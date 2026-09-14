@@ -53,6 +53,71 @@ public sealed class CategoryService
             .ToList();
     }
 
+    public async Task<CategoryResponseDto?> CreateCategoryAsync(CategoryDto dto)
+    {
+        var candidates = BuildCandidates(new[] { dto.Name });
+        if (candidates.Count == 0) return null;
+
+        var candidate = candidates.First();
+        
+        var existing = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Slug == candidate.Slug);
+        if (existing != null) return null; // Already exists
+
+        var category = new Category
+        {
+            Name = candidate.Name,
+            Slug = candidate.Slug
+        };
+
+        _dbContext.Categories.Add(category);
+        await _dbContext.SaveChangesAsync();
+
+        return new CategoryResponseDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+            Slug = category.Slug
+        };
+    }
+
+    public async Task<CategoryResponseDto?> UpdateCategoryAsync(int id, CategoryDto dto)
+    {
+        var category = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Id == id);
+        if (category == null) return null;
+
+        var candidates = BuildCandidates(new[] { dto.Name });
+        if (candidates.Count == 0) return null;
+
+        var candidate = candidates.First();
+
+        // Check if slug conflict exists with ANOTHER category
+        var existingWithSlug = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Slug == candidate.Slug && c.Id != id);
+        if (existingWithSlug != null) return null; // Conflict
+
+        category.Name = candidate.Name;
+        category.Slug = candidate.Slug;
+
+        await _dbContext.SaveChangesAsync();
+
+        return new CategoryResponseDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+            Slug = category.Slug
+        };
+    }
+
+    public async Task<bool> DeleteCategoryAsync(int id)
+    {
+        var category = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Id == id);
+        if (category == null) return false;
+
+        _dbContext.Categories.Remove(category);
+        await _dbContext.SaveChangesAsync();
+
+        return true;
+    }
+
     private static List<CategoryCandidate> BuildCandidates(
         IEnumerable<string> categoryNames)
     {

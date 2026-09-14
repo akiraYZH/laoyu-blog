@@ -22,6 +22,7 @@ const showLoginOption = computed(() => Object.prototype.hasOwnProperty.call(rout
         <RouterLink to="/contact">Contact</RouterLink>
         <template v-if="isAuthenticated">
           <RouterLink to="/create-blog"> Create Blog </RouterLink>
+          <RouterLink to="/manage-categories"> Categories </RouterLink>
 
           <a-button type="link" class="p-0!" @click="logout"> Logout </a-button>
         </template>

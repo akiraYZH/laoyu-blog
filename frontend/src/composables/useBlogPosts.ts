@@ -1,24 +1,14 @@
 import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { useBlogPostStore } from '@/stores/blogPost'
 import { ApiRequestError } from '@/stores/functions/readError'
-import type { BlogPost, BlogPostInput } from '@/types'
+import type { BlogPost, BlogPostInput, Category } from '@/types'
 
 export function useBlogPosts() {
   const store = useBlogPostStore()
 
-  const {
-    posts,
-    currentPost,
-    categories,
-    selectedCategorySlug,
-    page,
-    pageSize,
-    totalPages,
-    totalItems,
-    loading,
-    loadError,
-  } = storeToRefs(store)
+  const { selectedCategorySlug } = storeToRefs(store)
 
   function handleError(error: unknown, fallbackMessage: string) {
     if (error instanceof ApiRequestError) {
@@ -42,11 +32,28 @@ export function useBlogPosts() {
     requestedPage = 1,
     requestedPageSize = 10,
     requestedCategorySlug: string | null = selectedCategorySlug.value,
+    tag?: string,
+    untaggedOnly: boolean = false,
   ): Promise<void> {
     try {
-      await store.fetchPosts(requestedPage, requestedPageSize, requestedCategorySlug)
+      await store.fetchPosts(
+        requestedPage,
+        requestedPageSize,
+        requestedCategorySlug,
+        tag,
+        untaggedOnly,
+      )
     } catch (error) {
       handleError(error, 'Failed to load posts.')
+    }
+  }
+
+  async function getCategoryTags(categorySlug: string): Promise<string[]> {
+    try {
+      return await store.fetchCategoryTags(categorySlug)
+    } catch (error) {
+      handleError(error, 'Failed to load category tags.')
+      return []
     }
   }
 
@@ -127,20 +134,53 @@ export function useBlogPosts() {
     }
   }
 
+  async function createCategory(name: string): Promise<Category | null> {
+    try {
+      return await store.createCategory(name)
+    } catch (error) {
+      handleError(error, 'Failed to create category.')
+      return null
+    }
+  }
+
+  async function updateCategory(id: number, name: string): Promise<Category | null> {
+    try {
+      return await store.updateCategory(id, name)
+    } catch (error) {
+      handleError(error, 'Failed to update category.')
+      return null
+    }
+  }
+
+  async function deleteCategory(id: number): Promise<boolean> {
+    try {
+      await store.deleteCategory(id)
+      return true
+    } catch (error) {
+      handleError(error, 'Failed to delete category.')
+      return false
+    }
+  }
+
   return {
-    posts,
-    currentPost,
-    categories,
-    selectedCategorySlug,
-    page,
-    pageSize,
-    totalPages,
-    totalItems,
-    loading,
-    loadError,
+    posts: computed(() => store.posts),
+    currentPost: computed(() => store.currentPost),
+    categories: computed(() => store.categories),
+    selectedCategorySlug: computed(() => store.selectedCategorySlug),
+    page: computed(() => store.page),
+    pageSize: computed(() => store.pageSize),
+    totalPages: computed(() => store.totalPages),
+    totalItems: computed(() => store.totalItems),
+    loading: computed(() => store.loading),
+    loadError: computed(() => store.loadError),
+
     getPosts,
-    getPost,
     getCategories,
+    getCategoryTags,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    getPost,
     createPost,
     updatePost,
     publishPost,

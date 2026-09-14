@@ -26,6 +26,8 @@ public class BlogPostDto : IValidatableObject
     [Required(ErrorMessage = "Categories are required.")]
     public List<string> CategoryNames { get; set; } = [];
 
+    public List<string> Tags { get; set; } = [];
+
     [Required(ErrorMessage = "Content is required.")]
     public string Content { get; set; } = string.Empty;
 

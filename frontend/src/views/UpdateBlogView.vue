@@ -21,6 +21,7 @@ const initialValues = computed<BlogPostInput | null>(() => {
     slug: post.value.slug,
     content: post.value.content,
     categoryNames: post.value.categories.map((category) => category.name),
+    tags: post.value.tags,
   }
 })
 

@@ -26,6 +26,8 @@ namespace laoyu_blog_backend.Controllers
                 pagination.Page,
                 pagination.PageSize,
                 pagination.CategorySlug,
+                pagination.Tag,
+                pagination.UntaggedOnly,
                 includeDrafts);
 
             return Ok(result);

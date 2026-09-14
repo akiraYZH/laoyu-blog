@@ -18,6 +18,8 @@ public class BlogPost
 
     public DateTime? PublishedAtUtc { get; set; }
 
+    public List<string> Tags { get; set; } = [];
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public bool Publish()

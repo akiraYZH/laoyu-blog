@@ -12,6 +12,7 @@ const post: BlogPost = {
     { id: 1, name: 'Vue', slug: 'vue' },
     { id: 2, name: 'Testing', slug: 'testing' },
   ],
+  tags: [],
   status: 'Published',
   publishedAtUtc: '2026-09-11T12:00:00Z',
   createdAtUtc: '2026-09-10T12:00:00Z',

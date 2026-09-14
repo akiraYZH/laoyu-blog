@@ -12,4 +12,9 @@ public class PaginationQueryDto
 
     [StringLength(100, ErrorMessage = "Category slug cannot exceed 100 characters.")]
     public string? CategorySlug { get; set; }
+
+    [StringLength(100, ErrorMessage = "Tag cannot exceed 100 characters.")]
+    public string? Tag { get; set; }
+
+    public bool UntaggedOnly { get; set; } = false;
 }

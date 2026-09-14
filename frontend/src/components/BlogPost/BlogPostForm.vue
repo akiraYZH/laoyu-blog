@@ -28,6 +28,7 @@ const title = ref('')
 const slug = ref('')
 const content = ref('')
 const categoryNames = ref<string[]>([])
+const tags = ref<string[]>([])
 const { uploadImage } = useUploadImage()
 const { categories, getCategories } = useBlogPosts()
 
@@ -53,6 +54,7 @@ watch(
     slug.value = values.slug
     content.value = values.content
     categoryNames.value = [...values.categoryNames]
+    tags.value = values.tags ? [...values.tags] : []
   },
   { immediate: true },
 )
@@ -69,6 +71,7 @@ const submitForm = () => {
     slug: slug.value,
     content: content.value,
     categoryNames: [...categoryNames.value],
+    tags: [...tags.value],
   })
 }
 </script>
@@ -93,6 +96,16 @@ const submitForm = () => {
         class="w-full"
         placeholder="Select or create categories"
         :options="categoryOptions"
+      />
+    </div>
+
+    <div class="mb-5">
+      <a-typography-title :level="3">Tags</a-typography-title>
+      <a-select
+        v-model:value="tags"
+        mode="tags"
+        class="w-full"
+        placeholder="Create tags (e.g. DP, Graph, etc.)"
       />
     </div>
 

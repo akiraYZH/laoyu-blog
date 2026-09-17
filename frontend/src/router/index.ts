@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
+import { trackPageView } from '@/services/analytics'
 
 const defaultDescription =
   'Practical full-stack engineering tutorials built with ASP.NET Core, PostgreSQL, Vue, TypeScript, testing, and Docker.'
@@ -169,6 +170,8 @@ router.afterEach((to, _from, failure) => {
   if (robots) {
     robots.content = to.meta.noindex === true ? 'noindex, nofollow' : 'index, follow'
   }
+
+  trackPageView()
 })
 
 export default router

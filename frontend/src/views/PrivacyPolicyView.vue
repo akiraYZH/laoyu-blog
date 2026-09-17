@@ -2,7 +2,7 @@
   <article class="mx-auto max-w-3xl text-slate-700">
     <p class="text-sm font-semibold uppercase tracking-widest text-emerald-700">Legal</p>
     <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">Privacy Policy</h1>
-    <p class="mt-3 text-sm text-slate-500">Last updated: September 9, 2026</p>
+    <p class="mt-3 text-sm text-slate-500">Last updated: September 17, 2026</p>
 
     <p class="mt-8 leading-7">
       This policy explains how YZH Code handles information when you browse the site, use
@@ -17,6 +17,10 @@
         <li>
           Basic technical information sent with a web request, such as IP address, browser type,
           requested URL, timestamps, and server diagnostic logs.
+        </li>
+        <li>
+          Website usage information collected through Google Analytics, such as pages viewed,
+          approximate location, device type, browser, and referral source.
         </li>
         <li>
           Administrator authentication information. Access tokens may be stored in the
@@ -35,6 +39,28 @@
         Information is used to operate and secure the site, diagnose errors, respond to feedback,
         prevent abuse, and understand whether site features work as intended.
       </p>
+    </section>
+
+    <section class="mt-10" aria-labelledby="analytics-heading">
+      <h2 id="analytics-heading" class="text-2xl font-bold text-slate-900">Google Analytics</h2>
+      <div class="mt-4 space-y-4 leading-7">
+        <p>
+          YZH Code may use Google Analytics to understand site traffic and how visitors use the
+          site. Google may process usage and device information and use cookies or similar
+          technologies to provide this service.
+        </p>
+        <p>
+          You can learn more about
+          <a
+            class="font-semibold text-emerald-800 underline"
+            href="https://policies.google.com/technologies/partner-sites"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            how Google uses information from sites that use its services</a
+          >.
+        </p>
+      </div>
     </section>
 
     <section class="mt-10" aria-labelledby="ads-heading">

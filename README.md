@@ -40,6 +40,7 @@ Only the frontend port is published by the production Compose stack. The API and
 - Request-scoped structured logging with trace and user identifiers
 - xUnit unit and integration tests
 - Vue 3, Pinia, Vue Router, Ant Design Vue, and Tailwind CSS frontend
+- Optional Google Analytics 4 page-view tracking for client-side routes
 - Multi-stage development and production Docker images
 
 ## Prerequisites
@@ -60,6 +61,8 @@ cp .env.example .env.development
 ```
 
 Replace every `replace_with_...` placeholder. The administrator password must contain uppercase and lowercase letters, a number, and a non-alphanumeric character.
+
+To enable Google Analytics, replace `G-XXXXXXXXXX` with the GA4 web data stream's Measurement ID. The value is compiled into the frontend during the Docker build, so rebuild the frontend image after changing it. Leave `VITE_GA_MEASUREMENT_ID` empty to disable analytics.
 
 Environment files containing real credentials are ignored by Git. Never commit `.env.development` or `.env.production`.
 

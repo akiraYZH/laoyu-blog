@@ -17,12 +17,17 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || '22' }}
+          envs: VITE_GA_MEASUREMENT_ID
           script: |
+            set -e
+            test -n "$VITE_GA_MEASUREMENT_ID" || { echo "VITE_GA_MEASUREMENT_ID is not configured"; exit 1; }
             cd /www/wwwroot/laoyu-blog
             git pull --ff-only origin main
             make vps-up

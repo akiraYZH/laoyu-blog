@@ -16,6 +16,9 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 FROM development AS build
 
+ARG VITE_GA_MEASUREMENT_ID
+ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
+
 RUN npm run build
 
 FROM nginx:alpine AS runtime

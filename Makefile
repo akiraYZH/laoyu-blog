@@ -64,7 +64,9 @@ prod-ps:
 	$(PROD_COMPOSE) ps
 
 vps-up:
-	$(VPS_COMPOSE) up --detach --build
+	$(VPS_COMPOSE) build api
+	$(VPS_COMPOSE) build frontend
+	$(VPS_COMPOSE) up --detach --no-build
 
 vps-down:
 	$(VPS_COMPOSE) down

@@ -19,7 +19,8 @@ FROM development AS build
 ARG VITE_GA_MEASUREMENT_ID
 ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
 
-RUN npm run build
+RUN npm run type-check
+RUN npm run build-only
 
 FROM nginx:alpine AS runtime
 

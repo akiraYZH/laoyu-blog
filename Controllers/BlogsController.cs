@@ -33,6 +33,15 @@ namespace laoyu_blog_backend.Controllers
             return Ok(result);
         }
 
+        [HttpGet("tags")]
+        [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<string>>> GetTags()
+        {
+            var includeDrafts = User.IsInRole("Admin");
+
+            return Ok(await _blogPostService.GetTagsAsync(includeDrafts));
+        }
+
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(BlogPostResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

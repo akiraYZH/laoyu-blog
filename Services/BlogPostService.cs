@@ -412,6 +412,15 @@ namespace laoyu_blog_backend.Services
                 
             return tags;
         }
+
+        public async Task<List<string>> GetTagsAsync(bool includeDrafts)
+        {
+            return await BuildReadablePostsQuery(includeDrafts)
+                .SelectMany(post => post.Tags)
+                .Distinct()
+                .OrderBy(tag => tag)
+                .ToListAsync();
+        }
     }
 
 

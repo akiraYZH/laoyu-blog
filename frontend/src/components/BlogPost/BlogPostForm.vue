@@ -31,7 +31,7 @@ const categoryNames = ref<string[]>([])
 const tags = ref<string[]>([])
 const order = ref<number>(0)
 const { uploadImage } = useUploadImage()
-const { categories, getCategories } = useBlogPosts()
+const { categories, availableTags, getCategories, getTags } = useBlogPosts()
 
 const categoryOptions = computed(() =>
   categories.value.map((category) => ({
@@ -40,8 +40,16 @@ const categoryOptions = computed(() =>
   })),
 )
 
+const tagOptions = computed(() =>
+  [...new Set([...availableTags.value, ...tags.value])].map((tag) => ({
+    label: tag,
+    value: tag,
+  })),
+)
+
 onMounted(() => {
   getCategories()
+  getTags()
 })
 
 watch(
@@ -108,7 +116,8 @@ const submitForm = () => {
         v-model:value="tags"
         mode="tags"
         class="w-full"
-        placeholder="Create tags (e.g. DP, Graph, etc.)"
+        placeholder="Select or create tags"
+        :options="tagOptions"
       />
     </div>
 

@@ -9,6 +9,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
   const posts = ref<BlogPost[]>([])
   const currentPost = ref<BlogPost | null>(null)
   const categories = ref<Category[]>([])
+  const availableTags = ref<string[]>([])
   const selectedCategorySlug = ref<string | null>(null)
 
   // 分页数据
@@ -97,6 +98,22 @@ export const useBlogPostStore = defineStore('blogPost', () => {
       }
 
       return await response.json()
+    } catch (caughtError) {
+      loadError.value =
+        caughtError instanceof Error ? caughtError.message : '获取标签时发生未知错误'
+      throw caughtError
+    }
+  }
+
+  async function fetchTags(): Promise<void> {
+    try {
+      const response = await apiFetch('/api/blogs/tags')
+
+      if (!response.ok) {
+        throw new Error(`获取标签失败：HTTP ${response.status}`)
+      }
+
+      availableTags.value = await response.json()
     } catch (caughtError) {
       loadError.value =
         caughtError instanceof Error ? caughtError.message : '获取标签时发生未知错误'
@@ -349,6 +366,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     posts,
     currentPost,
     categories,
+    availableTags,
     selectedCategorySlug,
     page,
     pageSize,
@@ -358,6 +376,7 @@ export const useBlogPostStore = defineStore('blogPost', () => {
     loadError,
     fetchPosts,
     fetchCategories,
+    fetchTags,
     fetchCategoryTags,
     createCategory,
     updateCategory,

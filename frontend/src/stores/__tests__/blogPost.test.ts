@@ -78,6 +78,22 @@ describe('blog post store', () => {
     expect(store.loading).toBe(false)
   })
 
+  it('loads existing tags for the post form', async () => {
+    mockedApiFetch.mockResolvedValue(
+      new Response(JSON.stringify(['C#', 'Vue']), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const store = useBlogPostStore()
+
+    await store.fetchTags()
+
+    expect(mockedApiFetch).toHaveBeenCalledExactlyOnceWith('/api/blogs/tags')
+    expect(store.availableTags).toEqual(['C#', 'Vue'])
+  })
+
   it('uses a cached post instead of sending another request', async () => {
     const store = useBlogPostStore()
     store.posts = [publishedPost]

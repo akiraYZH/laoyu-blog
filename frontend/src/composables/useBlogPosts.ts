@@ -74,6 +74,14 @@ export function useBlogPosts() {
     }
   }
 
+  async function getTags(): Promise<void> {
+    try {
+      await store.fetchTags()
+    } catch (error) {
+      handleError(error, 'Failed to load tags.')
+    }
+  }
+
   async function createPost(input: BlogPostInput): Promise<BlogPost | null> {
     try {
       const createdPost = await store.createBlogPost(input)
@@ -166,6 +174,7 @@ export function useBlogPosts() {
     posts: computed(() => store.posts),
     currentPost: computed(() => store.currentPost),
     categories: computed(() => store.categories),
+    availableTags: computed(() => store.availableTags),
     selectedCategorySlug: computed(() => store.selectedCategorySlug),
     page: computed(() => store.page),
     pageSize: computed(() => store.pageSize),
@@ -176,6 +185,7 @@ export function useBlogPosts() {
 
     getPosts,
     getCategories,
+    getTags,
     getCategoryTags,
     createCategory,
     updateCategory,

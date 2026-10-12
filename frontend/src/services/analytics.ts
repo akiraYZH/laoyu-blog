@@ -4,7 +4,7 @@ type GtagArguments = [command: string, ...parameters: unknown[]]
 
 declare global {
   interface Window {
-    dataLayer: GtagArguments[]
+    dataLayer: IArguments[]
     gtag: (...args: GtagArguments) => void
   }
 }
@@ -15,8 +15,10 @@ export function initializeGoogleAnalytics() {
   }
 
   window.dataLayer = window.dataLayer || []
-  window.gtag = (...args: GtagArguments) => {
-    window.dataLayer.push(args)
+  window.gtag = function () {
+    // Google tag commands must use the function's Arguments object, as in the official snippet.
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer.push(arguments)
   }
 
   window.gtag('js', new Date())
